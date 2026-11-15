@@ -1,0 +1,1992 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>মাদরাসা ফলাফল ও রিপোর্ট কার্ড ব্যবস্থাপনা সফটওয়্যার - ফেঞ্চুগঞ্জ মোহাম্মদিয়া কামিল মাদরাসা</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- SheetJS for Excel Import/Export -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <!-- Google Fonts: Hind Siliguri & Noto Sans Bengali -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@300;400;500;600;700&family=Noto+Sans+Bengali:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    <style>
+        body {
+            font-family: 'Hind Siliguri', 'Noto Sans Bengali', sans-serif;
+            background-color: #f3f6f4;
+            color: #1e293b;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #e2e8f0;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #047857;
+            border-radius: 4px;
+        }
+
+        /* Print Styles */
+        @media print {
+            body {
+                background: #ffffff !important;
+                margin: 0 !important;
+                padding: 0 !important;
+            }
+            .no-print {
+                display: none !important;
+            }
+            .print-only {
+                display: block !important;
+            }
+            .print-container {
+                width: 100% !important;
+                max-width: 100% !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                box-shadow: none !important;
+                border: none !important;
+            }
+            .report-card-page {
+                page-break-after: always;
+                break-after: page;
+                border: 2px solid #065f46 !important;
+                padding: 16px !important;
+                margin-bottom: 0 !important;
+                box-shadow: none !important;
+                background: #ffffff !important;
+            }
+            .report-card-page:last-child {
+                page-break-after: auto;
+                break-after: auto;
+            }
+            @page {
+                size: A4 portrait;
+                margin: 8mm;
+            }
+            body.landscape-print @page {
+                size: A4 landscape;
+                margin: 8mm;
+            }
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col">
+
+    <!-- Toast Notification Container -->
+    <div id="toastContainer" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 no-print"></div>
+
+    <!-- Top Institution Header -->
+    <header class="bg-gradient-to-r from-emerald-900 via-emerald-800 to-teal-900 text-white shadow-lg no-print">
+        <div class="max-w-7xl mx-auto px-4 py-4">
+            <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+                <!-- Branding -->
+                <div class="flex items-center gap-3.5">
+                    <div class="w-14 h-14 rounded-2xl bg-amber-400/20 border-2 border-amber-300/60 flex items-center justify-center shrink-0 shadow-inner">
+                        <i class="fa-solid fa-mosque text-2xl text-amber-300"></i>
+                    </div>
+                    <div>
+                        <div class="flex items-center gap-2 flex-wrap">
+                            <h1 class="text-xl sm:text-2xl font-bold tracking-wide text-white">ফেঞ্চুগঞ্জ মোহাম্মদিয়া কামিল মাদরাসা</h1>
+                            <span class="px-2.5 py-0.5 text-xs font-semibold bg-amber-400 text-emerald-950 rounded-full">স্থাপিত: ১৯৫৬</span>
+                        </div>
+                        <p class="text-emerald-200 text-xs sm:text-sm">ফেঞ্চুগঞ্জ, সিলেট | স্বয়ংক্রিয় ফলাফল ও রিপোর্ট কার্ড ব্যবস্থাপনা সফটওয়্যার (১ম - ১০ম শ্রেণি)</p>
+                    </div>
+                </div>
+
+                <!-- Global Controls: Class & Exam Selector -->
+                <div class="flex flex-wrap items-center gap-2.5 bg-emerald-950/50 p-2.5 rounded-xl border border-emerald-700/60">
+                    <div>
+                        <label class="block text-[11px] text-emerald-300 font-medium">শ্রেণি নির্বাচন করুন</label>
+                        <select id="globalClassSelect" onchange="handleContextChange()" class="bg-white text-slate-900 text-sm font-semibold rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-amber-400">
+                            <option value="১ম শ্রেণি">১ম শ্রেণি (ইবতেদায়ী)</option>
+                            <option value="২য় শ্রেণি">২য় শ্রেণি (ইবতেদায়ী)</option>
+                            <option value="৩য় শ্রেণি">৩য় শ্রেণি (ইবতেদায়ী)</option>
+                            <option value="৪র্থ শ্রেণি">৪র্থ শ্রেণি (ইবতেদায়ী)</option>
+                            <option value="৫ম শ্রেণি">৫ম শ্রেণি (ইবতেদায়ী)</option>
+                            <option value="৬ষ্ঠ শ্রেণি" selected>৬ষ্ঠ শ্রেণি (দাখিল)</option>
+                            <option value="৭ম শ্রেণি">৭ম শ্রেণি (দাখিল)</option>
+                            <option value="৮ম শ্রেণি">৮ম শ্রেণি (দাখিল)</option>
+                            <option value="৯ম শ্রেণি">৯ম শ্রেণি (দাখিল)</option>
+                            <option value="১০ম শ্রেণি">১০ম শ্রেণি (দাখিল)</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-[11px] text-emerald-300 font-medium">শাখা নির্বাচন করুন</label>
+                        <select id="globalBranchSelect" onchange="handleContextChange()" class="bg-white text-slate-900 text-sm font-semibold rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-amber-400">
+                            <option value="বালক শাখা" selected>বালক শাখা</option>
+                            <option value="বালিকা শাখা">বালিকা শাখা</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-[11px] text-emerald-300 font-medium">পরীক্ষার নাম</label>
+                        <select id="globalExamSelect" onchange="handleContextChange()" class="bg-white text-slate-900 text-sm font-semibold rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-amber-400">
+                            <option value="অর্ধবার্ষিক পরীক্ষা-২০২৬">অর্ধবার্ষিক পরীক্ষা-২০২৬</option>
+                            <option value="বার্ষিক পরীক্ষা-২০২৬" selected>বার্ষিক পরীক্ষা-২০২৬</option>
+                            <option value="১ম সাময়িক পরীক্ষা-২০২৬">১ম সাময়িক পরীক্ষা-২০২৬</option>
+                            <option value="২য় সাময়িক পরীক্ষা-২০২৬">২য় সাময়িক পরীক্ষা-২০২৬</option>
+                            <option value="নির্বাচনী পরীক্ষা-২০২৬">নির্বাচনী পরীক্ষা-২০২৬</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-[11px] text-emerald-300 font-medium">শিক্ষাবর্ষ</label>
+                        <input type="text" id="globalSessionInput" value="২০২৬" onchange="handleContextChange()" class="w-20 bg-white text-slate-900 text-sm font-semibold rounded-lg px-2.5 py-1.5 text-center focus:outline-none focus:ring-2 focus:ring-amber-400">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Navigation Tabs -->
+            <nav class="flex items-center gap-1.5 overflow-x-auto pt-4 pb-1 mt-2 border-t border-emerald-700/60">
+                <button onclick="switchTab('dashboard')" id="tab-dashboard" class="nav-btn active-tab px-4 py-2 rounded-lg text-sm font-semibold flex items-center gap-2 whitespace-nowrap transition bg-amber-400 text-emerald-950 shadow">
+                    <i class="fa-solid fa-chart-pie"></i> ড্যাশবোর্ড
+                </button>
+                <button onclick="switchTab('students')" id="tab-students" class="nav-btn px-4 py-2 rounded-lg text-sm font-semibold flex items-center gap-2 whitespace-nowrap transition text-emerald-100 hover:bg-emerald-800">
+                    <i class="fa-solid fa-users"></i> শিক্ষার্থী তালিকা (<span id="navStudentCount">১৫৫</span>)
+                </button>
+                <button onclick="switchTab('subjects')" id="tab-subjects" class="nav-btn px-4 py-2 rounded-lg text-sm font-semibold flex items-center gap-2 whitespace-nowrap transition text-emerald-100 hover:bg-emerald-800">
+                    <i class="fa-solid fa-book-open"></i> বিষয় ও মানবণ্টন
+                </button>
+                <button onclick="switchTab('marks')" id="tab-marks" class="nav-btn px-4 py-2 rounded-lg text-sm font-semibold flex items-center gap-2 whitespace-nowrap transition text-emerald-100 hover:bg-emerald-800">
+                    <i class="fa-solid fa-pen-to-square"></i> নম্বর এন্ট্রি
+                </button>
+                <button onclick="switchTab('tabulation')" id="tab-tabulation" class="nav-btn px-4 py-2 rounded-lg text-sm font-semibold flex items-center gap-2 whitespace-nowrap transition text-emerald-100 hover:bg-emerald-800">
+                    <i class="fa-solid fa-table-list"></i> ট্যাবুলেশন ও মেধাতালিকা
+                </button>
+                <button onclick="switchTab('reportcard')" id="tab-reportcard" class="nav-btn px-4 py-2 rounded-lg text-sm font-semibold flex items-center gap-2 whitespace-nowrap transition text-emerald-100 hover:bg-emerald-800">
+                    <i class="fa-solid fa-award"></i> রিপোর্ট কার্ড ও প্রিন্ট
+                </button>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Main Workspace -->
+    <main class="flex-1 max-w-7xl w-full mx-auto px-4 py-6">
+
+        <!-- ==================== TAB 1: DASHBOARD ==================== -->
+        <section id="view-dashboard" class="tab-view space-y-6">
+            <!-- Quick Action Banner -->
+            <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-200 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                <div>
+                    <h2 class="text-lg font-bold text-slate-800 flex items-center gap-2">
+                        <span class="w-2.5 h-2.5 rounded-full bg-emerald-600"></span>
+                        বর্তমান নির্বাচিত শ্রেণি: <span id="dashClassTitle" class="text-emerald-700">৬ষ্ঠ শ্রেণি</span> (<span id="dashExamTitle" class="text-amber-700">বার্ষিক পরীক্ষা-২০২৬</span>)
+                    </h2>
+                    <p id="dashContextSubtitle" class="text-sm text-slate-500 mt-0.5">১ম থেকে ১০ম শ্রেণি পর্যন্ত সকল শ্রেণির বালক ও বালিকা শাখার শিক্ষার্থী ও ফলাফল আলাদাভাবে পরিচালনা করা যাবে।</p>
+                </div>
+                <div class="flex flex-wrap gap-2">
+                    <button onclick="fillDemoMarksForClass()" class="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-emerald-950 font-semibold rounded-xl text-sm shadow-sm transition flex items-center gap-2">
+                        <i class="fa-solid fa-wand-magic-sparkles"></i> নমুনা নম্বর বসিয়ে ফলাফল দেখুন
+                    </button>
+                    <button onclick="switchTab('marks')" class="px-4 py-2 bg-emerald-700 hover:bg-emerald-800 text-white font-semibold rounded-xl text-sm shadow-sm transition flex items-center gap-2">
+                        <i class="fa-solid fa-keyboard"></i> নম্বর এন্ট্রি শুরু করুন
+                    </button>
+                </div>
+            </div>
+
+            <!-- KPI Cards -->
+            <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+                <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200">
+                    <div class="text-xs font-semibold text-slate-500">মোট শিক্ষার্থী</div>
+                    <div id="kpiTotalStudents" class="text-2xl font-bold text-slate-800 mt-1">১৫৫</div>
+                    <div class="text-[11px] text-emerald-600 mt-1"><i class="fa-solid fa-user-check"></i> নিবন্ধিত</div>
+                </div>
+                <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200">
+                    <div class="text-xs font-semibold text-slate-500">অংশগ্রহণকারী</div>
+                    <div id="kpiAppeared" class="text-2xl font-bold text-blue-700 mt-1">০</div>
+                    <div class="text-[11px] text-slate-500 mt-1">নম্বর এন্ট্রিকৃত</div>
+                </div>
+                <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200">
+                    <div class="text-xs font-semibold text-slate-500">মোট উত্তীর্ণ (Pass)</div>
+                    <div id="kpiPassed" class="text-2xl font-bold text-emerald-600 mt-1">০</div>
+                    <div class="text-[11px] text-emerald-600 mt-1">সকল বিষয়ে পাস</div>
+                </div>
+                <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200">
+                    <div class="text-xs font-semibold text-slate-500">অকৃতকার্য (Fail)</div>
+                    <div id="kpiFailed" class="text-2xl font-bold text-rose-600 mt-1">০</div>
+                    <div class="text-[11px] text-rose-500 mt-1">১ বা একাধিক বিষয়ে</div>
+                </div>
+                <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200">
+                    <div class="text-xs font-semibold text-slate-500">পাশের হার</div>
+                    <div id="kpiPassRate" class="text-2xl font-bold text-teal-700 mt-1">০%</div>
+                    <div class="text-[11px] text-slate-500 mt-1">শতকরা হার</div>
+                </div>
+                <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200">
+                    <div class="text-xs font-semibold text-slate-500">জিপিএ ৫.০০ (A+)</div>
+                    <div id="kpiGpa5" class="text-2xl font-bold text-amber-600 mt-1">০</div>
+                    <div class="text-[11px] text-amber-600 mt-1"><i class="fa-solid fa-star"></i> সর্বোচ্চ ফলাফল</div>
+                </div>
+            </div>
+
+            <!-- Grade Distribution & Top 5 Merit -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <!-- Grade Breakdown -->
+                <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200">
+                    <h3 class="font-bold text-slate-800 mb-4 flex items-center gap-2">
+                        <i class="fa-solid fa-chart-bar text-emerald-600"></i> গ্রেড ভিত্তিক ফলাফল পরিসংখ্যান
+                    </h3>
+                    <div id="gradeDistributionBars" class="space-y-3"></div>
+                </div>
+
+                <!-- Top 5 Merit List -->
+                <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="font-bold text-slate-800 flex items-center gap-2">
+                            <i class="fa-solid fa-trophy text-amber-500"></i> মেধাতালিকায় শীর্ষ ৫ শিক্ষার্থী
+                        </h3>
+                        <button onclick="switchTab('tabulation')" class="text-xs font-semibold text-emerald-700 hover:underline">সম্পূর্ণ তালিকা দেখুন &rarr;</button>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-sm text-left">
+                            <thead class="bg-slate-100 text-slate-700">
+                                <tr>
+                                    <th class="p-2.5 rounded-tl-lg">মেধাক্রম</th>
+                                    <th class="p-2.5">রোল</th>
+                                    <th class="p-2.5">শিক্ষার্থীর নাম</th>
+                                    <th class="p-2.5 text-center">মোট নম্বর</th>
+                                    <th class="p-2.5 text-center rounded-tr-lg">GPA</th>
+                                </tr>
+                            </thead>
+                            <tbody id="dashTop5Body" class="divide-y divide-slate-100"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- System Backup / Reset Bar -->
+            <div class="bg-slate-800 text-slate-200 rounded-2xl p-4 flex flex-col sm:flex-row items-center justify-between gap-4">
+                <div class="text-xs sm:text-sm">
+                    <i class="fa-solid fa-database text-amber-400 mr-1.5"></i>
+                    আপনার সকল শ্রেণির শিক্ষার্থী ও ফলাফলের তথ্য ব্রাউজারে স্বয়ংক্রিয়ভাবে সংরক্ষিত থাকে। ব্যাকআপ রাখতে নিচের বাটন ব্যবহার করুন।
+                </div>
+                <div class="flex flex-wrap gap-2">
+                    <button onclick="exportFullBackup()" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-semibold transition">
+                        <i class="fa-solid fa-download mr-1"></i> ব্যাকআপ ডাউনলোড (JSON)
+                    </button>
+                    <label class="px-3 py-1.5 bg-slate-700 hover:bg-slate-600 text-white rounded-lg text-xs font-semibold cursor-pointer transition">
+                        <i class="fa-solid fa-upload mr-1"></i> ব্যাকআপ রিস্টোর
+                        <input type="file" accept=".json" onchange="importFullBackup(event)" class="hidden">
+                    </label>
+                    <button onclick="resetToDefault6thClass()" class="px-3 py-1.5 bg-rose-700 hover:bg-rose-600 text-white rounded-lg text-xs font-semibold transition">
+                        <i class="fa-solid fa-rotate-left mr-1"></i> রিসেট ডাটা
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==================== TAB 2: STUDENT MANAGEMENT ==================== -->
+        <section id="view-students" class="tab-view hidden space-y-5">
+            <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                <div>
+                    <h2 class="text-lg font-bold text-slate-800">শিক্ষার্থী তালিকা ব্যবস্থাপনা - <span id="stuClassLabel" class="text-emerald-700">৬ষ্ঠ শ্রেণি</span></h2>
+                    <p class="text-xs text-slate-500">নতুন শিক্ষার্থী যোগ করুন অথবা ভর্তি বহির এক্সেল ফাইল (.xlsx / .csv) আপলোড করুন।</p>
+                </div>
+                <div class="flex flex-wrap items-center gap-2">
+                    <button onclick="openStudentModal()" class="px-4 py-2 bg-emerald-700 hover:bg-emerald-800 text-white text-sm font-semibold rounded-xl shadow-sm transition flex items-center gap-2">
+                        <i class="fa-solid fa-user-plus"></i> নতুন শিক্ষার্থী যোগ করুন
+                    </button>
+                    <label class="px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white text-sm font-semibold rounded-xl shadow-sm cursor-pointer transition flex items-center gap-2">
+                        <i class="fa-solid fa-file-excel"></i> এক্সেল ফাইল ইমপোর্ট (.xlsx)
+                        <input type="file" accept=".xlsx,.xls,.csv" onchange="handleExcelImport(event)" class="hidden">
+                    </label>
+                    <button onclick="exportStudentsToExcel()" class="px-4 py-2 bg-slate-700 hover:bg-slate-800 text-white text-sm font-semibold rounded-xl shadow-sm transition flex items-center gap-2">
+                        <i class="fa-solid fa-file-export"></i> এক্সেল এক্সপোর্ট
+                    </button>
+                </div>
+            </div>
+
+            <!-- Search Bar -->
+            <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200 flex flex-col sm:flex-row gap-3">
+                <div class="relative flex-1">
+                    <i class="fa-solid fa-search absolute left-3.5 top-3 text-slate-400"></i>
+                    <input type="text" id="studentSearchInput" oninput="renderStudentsTable()" placeholder="নাম, রোল নং, ইউনিক আইডি, পিতার নাম বা মোবাইল নম্বর দিয়ে খুঁজুন..." class="w-full pl-10 pr-4 py-2 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                </div>
+                <div class="text-sm text-slate-600 flex items-center px-3 bg-slate-100 rounded-xl font-medium">
+                    মোট শিক্ষার্থী: <span id="filteredStudentCount" class="font-bold text-emerald-700 ml-1">১৫৫</span> জন
+                </div>
+            </div>
+
+            <!-- Students Table -->
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+                <div class="overflow-x-auto max-h-[600px]">
+                    <table class="w-full text-sm text-left border-collapse">
+                        <thead class="bg-emerald-900 text-white sticky top-0 z-10">
+                            <tr>
+                                <th class="p-3 w-16 text-center">রোল/ক্রম</th>
+                                <th class="p-3">শিক্ষার্থীর নাম</th>
+                                <th class="p-3">ইউনিক আইডি</th>
+                                <th class="p-3">পিতা ও মাতার নাম</th>
+                                <th class="p-3">মোবাইল</th>
+                                <th class="p-3">ঠিকানা</th>
+                                <th class="p-3 text-center w-28">অ্যাকশন</th>
+                            </tr>
+                        </thead>
+                        <tbody id="studentsTableBody" class="divide-y divide-slate-200"></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==================== TAB 3: SUBJECTS & GRADING ==================== -->
+        <section id="view-subjects" class="tab-view hidden space-y-6">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- Subject List Config -->
+                <div class="lg:col-span-2 bg-white p-5 rounded-2xl shadow-sm border border-slate-200 space-y-4">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b pb-3">
+                        <div>
+                            <h2 class="text-lg font-bold text-slate-800">বিষয় ও পূর্ণমান নির্ধারণ - <span id="subClassLabel" class="text-emerald-700">৬ষ্ঠ শ্রেণি</span></h2>
+                            <p class="text-xs text-slate-500">বাংলাদেশ মাদরাসা শিক্ষা বোর্ডের সিলেবাস অনুযায়ী বিষয়সমূহ নির্ধারিত আছে। আপনি প্রয়োজনে পরিবর্তন করতে পারবেন।</p>
+                        </div>
+                        <button onclick="addSubjectRow()" class="px-3.5 py-2 bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-semibold rounded-xl shadow-sm transition flex items-center gap-1.5 self-start">
+                            <i class="fa-solid fa-plus"></i> নতুন বিষয় যোগ করুন
+                        </button>
+                    </div>
+
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-sm text-left">
+                            <thead class="bg-slate-100 text-slate-700">
+                                <tr>
+                                    <th class="p-2.5 w-12 text-center">ক্রম</th>
+                                    <th class="p-2.5">বিষয়ের নাম</th>
+                                    <th class="p-2.5 w-28 text-center">পূর্ণমান</th>
+                                    <th class="p-2.5 w-28 text-center">পাস নম্বর</th>
+                                    <th class="p-2.5 w-20 text-center">মুছুন</th>
+                                </tr>
+                            </thead>
+                            <tbody id="subjectsConfigBody" class="divide-y divide-slate-200"></tbody>
+                        </table>
+                    </div>
+
+                    <div class="flex justify-between items-center pt-3 border-t">
+                        <button onclick="resetDefaultSubjectsForClass()" class="text-xs text-slate-600 hover:text-emerald-700 font-semibold underline">
+                            ডিফল্ট মাদরাসা বিষয়সমূহ ফিরিয়ে আনুন
+                        </button>
+                        <button onclick="saveSubjectsConfig()" class="px-5 py-2 bg-emerald-700 hover:bg-emerald-800 text-white text-sm font-semibold rounded-xl shadow transition">
+                            <i class="fa-solid fa-check mr-1"></i> বিষয়সমূহ সংরক্ষণ করুন
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Grading Scale Reference -->
+                <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200">
+                    <h3 class="font-bold text-slate-800 mb-3 flex items-center gap-2">
+                        <i class="fa-solid fa-scale-balanced text-amber-500"></i> মাদরাসা বোর্ড গ্রেডিং পদ্ধতি
+                    </h3>
+                    <p class="text-xs text-slate-500 mb-3">১০০ নম্বরের স্কেলে (৫০ নম্বরের বিষয়ের ক্ষেত্রে আনুপাতিক হারে স্বয়ংক্রিয়ভাবে হিসাব হবে):</p>
+                    <table class="w-full text-xs border border-slate-200 text-center">
+                        <thead class="bg-emerald-900 text-white">
+                            <tr>
+                                <th class="p-2 border border-emerald-800">নম্বরের ব্যাপ্তি (%)</th>
+                                <th class="p-2 border border-emerald-800">লেটার গ্রেড (LG)</th>
+                                <th class="p-2 border border-emerald-800">গ্রেড পয়েন্ট (GP)</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-200 font-medium">
+                            <tr class="bg-emerald-50/50"><td class="p-2 border">৮০ - ১০০</td><td class="p-2 border font-bold text-emerald-700">A+</td><td class="p-2 border">৫.০০</td></tr>
+                            <tr><td class="p-2 border">৭০ - ৭৯</td><td class="p-2 border font-bold text-emerald-600">A</td><td class="p-2 border">৪.০০</td></tr>
+                            <tr><td class="p-2 border">৬০ - ৬৯</td><td class="p-2 border font-bold text-teal-600">A-</td><td class="p-2 border">৩.৫০</td></tr>
+                            <tr><td class="p-2 border">৫০ - ৫৯</td><td class="p-2 border font-bold text-blue-600">B</td><td class="p-2 border">৩.০০</td></tr>
+                            <tr><td class="p-2 border">৪০ - ৪৯</td><td class="p-2 border font-bold text-indigo-600">C</td><td class="p-2 border">২.০০</td></tr>
+                            <tr><td class="p-2 border">৩৩ - ৩৯</td><td class="p-2 border font-bold text-amber-600">D</td><td class="p-2 border">১.০০</td></tr>
+                            <tr class="bg-rose-50"><td class="p-2 border">০০ - ৩২</td><td class="p-2 border font-bold text-rose-600">F</td><td class="p-2 border">০.০০</td></tr>
+                        </tbody>
+                    </table>
+                    <div class="mt-4 p-3 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-900">
+                        <strong>বিঃদ্রঃ</strong> যেকোনো ১টি বিষয়ে 'F' গ্রেড পেলে সামগ্রিক ফলাফল <strong>অকৃতকার্য (Failed)</strong> এবং GPA <strong>০.০০</strong> হিসেবে গণ্য হবে।
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==================== TAB 4: MARKS ENTRY ==================== -->
+        <section id="view-marks" class="tab-view hidden space-y-4">
+            <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                <div>
+                    <h2 class="text-lg font-bold text-slate-800">নম্বর এন্ট্রি শিট - <span id="marksClassLabel" class="text-emerald-700">৬ষ্ঠ শ্রেণি</span> (<span id="marksExamLabel" class="text-amber-700">বার্ষিক পরীক্ষা-২০২৬</span>)</h2>
+                    <p class="text-xs text-slate-500">ইংরেজি (0-9) বা বাংলা (০-৯) যেকোনো সংখ্যায় নম্বর টাইপ করুন। নম্বর লিখলেই মোট নম্বর, গ্রেড ও GPA স্বয়ংক্রিয়ভাবে হিসাব ও সংরক্ষণ হবে।</p>
+                </div>
+                <div class="flex flex-wrap items-center gap-2">
+                    <input type="text" id="marksSearchInput" oninput="renderMarksEntryTable()" placeholder="রোল বা নাম দিয়ে খুঁজুন..." class="px-3 py-1.5 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                    <button onclick="fillDemoMarksForClass()" class="px-3 py-1.5 bg-amber-500 hover:bg-amber-600 text-emerald-950 text-xs font-semibold rounded-xl transition">
+                        <i class="fa-solid fa-wand-magic-sparkles mr-1"></i> নমুনা নম্বর পূরণ
+                    </button>
+                    <button onclick="clearMarksForClass()" class="px-3 py-1.5 bg-rose-100 hover:bg-rose-200 text-rose-700 text-xs font-semibold rounded-xl transition">
+                        <i class="fa-solid fa-eraser mr-1"></i> নম্বর মুছুন
+                    </button>
+                </div>
+            </div>
+
+            <!-- Spreadsheet Table -->
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+                <div class="overflow-x-auto max-h-[650px]">
+                    <table class="w-full text-xs sm:text-sm text-left border-collapse" id="marksEntryTable">
+                        <thead id="marksEntryThead" class="bg-emerald-900 text-white sticky top-0 z-10"></thead>
+                        <tbody id="marksEntryTbody" class="divide-y divide-slate-200"></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==================== TAB 5: TABULATION & MERIT LIST ==================== -->
+        <section id="view-tabulation" class="tab-view hidden space-y-4">
+            <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200 flex flex-col lg:flex-row lg:items-center justify-between gap-4 no-print">
+                <div>
+                    <h2 class="text-lg font-bold text-slate-800">ট্যাবুলেশন শিট ও মেধাতালিকা</h2>
+                    <p class="text-xs text-slate-500">GPA ও প্রাপ্ত মোট নম্বরের ভিত্তিতে স্বয়ংক্রিয় মেধাক্রম নির্ধারিত হয়েছে।</p>
+                </div>
+                <div class="flex flex-wrap items-center gap-2">
+                    <select id="tabulationSortSelect" onchange="renderTabulationTable()" class="px-3 py-1.5 border border-slate-300 rounded-xl text-sm font-medium bg-white">
+                        <option value="merit">মেধাক্রম অনুযায়ী সাজান</option>
+                        <option value="roll">রোল নম্বর অনুযায়ী সাজান</option>
+                    </select>
+                    <select id="tabulationFilterSelect" onchange="renderTabulationTable()" class="px-3 py-1.5 border border-slate-300 rounded-xl text-sm font-medium bg-white">
+                        <option value="all">সকল শিক্ষার্থী</option>
+                        <option value="passed">শুধুমাত্র উত্তীর্ণ (Passed)</option>
+                        <option value="failed">শুধুমাত্র অকৃতকার্য (Failed)</option>
+                    </select>
+                    <button onclick="exportTabulationToExcel()" class="px-3.5 py-1.5 bg-teal-700 hover:bg-teal-800 text-white text-sm font-semibold rounded-xl shadow-sm transition">
+                        <i class="fa-solid fa-file-excel mr-1"></i> এক্সেল ডাউনলোড
+                    </button>
+                    <button onclick="printTabulation()" class="px-3.5 py-1.5 bg-emerald-700 hover:bg-emerald-800 text-white text-sm font-semibold rounded-xl shadow-sm transition">
+                        <i class="fa-solid fa-print mr-1"></i> ট্যাবুলেশন প্রিন্ট
+                    </button>
+                </div>
+            </div>
+
+            <!-- Printable Tabulation Area -->
+            <div id="tabulationPrintArea" class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 print-container">
+                <div class="text-center mb-4 border-b-2 border-emerald-800 pb-3">
+                    <h2 class="text-xl font-bold text-emerald-950">ফেঞ্চুগঞ্জ মোহাম্মদিয়া কামিল মাদরাসা, ফেঞ্চুগঞ্জ, সিলেট</h2>
+                    <p class="text-sm font-semibold text-slate-700">
+                        ট্যাবুলেশন শিট (Tabulation Sheet) — <span id="tabHeaderExam">বার্ষিক পরীক্ষা-২০২৬</span> | শ্রেণি: <span id="tabHeaderClass">৬ষ্ঠ শ্রেণি</span>
+                    </p>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table class="w-full text-xs text-center border-collapse border border-slate-400">
+                        <thead id="tabulationThead" class="bg-emerald-900 text-white"></thead>
+                        <tbody id="tabulationTbody" class="divide-y divide-slate-300"></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==================== TAB 6: REPORT CARD & PRINT ==================== -->
+        <section id="view-reportcard" class="tab-view hidden space-y-5">
+            <!-- Controls -->
+            <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200 flex flex-col lg:flex-row lg:items-center justify-between gap-4 no-print">
+                <div class="flex flex-wrap items-center gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 mb-1">শিক্ষার্থী নির্বাচন করুন</label>
+                        <select id="reportStudentSelect" onchange="renderReportCards()" class="px-3 py-2 border border-slate-300 rounded-xl text-sm font-semibold bg-white min-w-[260px]">
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 mb-1">প্রিন্ট মোড</label>
+                        <select id="reportModeSelect" onchange="renderReportCards()" class="px-3 py-2 border border-slate-300 rounded-xl text-sm font-semibold bg-white">
+                            <option value="single">একক শিক্ষার্থীর রিপোর্ট কার্ড</option>
+                            <option value="batch10">প্রথম ১০ জনের রিপোর্ট কার্ড (Batch)</option>
+                            <option value="batchAll">সকল শিক্ষার্থীর রিপোর্ট কার্ড (All)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="flex flex-wrap items-center gap-2">
+                    <button onclick="prevReportStudent()" class="px-3 py-2 bg-slate-200 hover:bg-slate-300 text-slate-800 rounded-xl text-sm font-semibold transition">
+                        <i class="fa-solid fa-chevron-left"></i> পূর্ববর্তী
+                    </button>
+                    <button onclick="nextReportStudent()" class="px-3 py-2 bg-slate-200 hover:bg-slate-300 text-slate-800 rounded-xl text-sm font-semibold transition">
+                        পরবর্তী <i class="fa-solid fa-chevron-right"></i>
+                    </button>
+                    <button onclick="printReportCards()" class="px-5 py-2 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl text-sm font-bold shadow transition flex items-center gap-2">
+                        <i class="fa-solid fa-print"></i> রিপোর্ট কার্ড প্রিন্ট / PDF সেভ করুন
+                    </button>
+                </div>
+            </div>
+
+            <!-- Report Cards Container -->
+            <div id="reportCardsContainer" class="space-y-8 print-container"></div>
+        </section>
+
+    </main>
+
+    <!-- Add/Edit Student Modal -->
+    <div id="studentModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 hidden flex items-center justify-center p-4 no-print">
+        <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-slate-200">
+            <div class="flex items-center justify-between border-b pb-3 mb-4">
+                <h3 id="studentModalTitle" class="text-lg font-bold text-slate-800">নতুন শিক্ষার্থী যোগ করুন</h3>
+                <button onclick="closeStudentModal()" class="text-slate-400 hover:text-slate-600 text-xl">&times;</button>
+            </div>
+            <form id="studentForm" onsubmit="saveStudentForm(event)" class="space-y-3 text-sm">
+                <input type="hidden" id="editStudentIndex" value="-1">
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block font-semibold text-slate-700 mb-1">রোল / ক্রম নং *</label>
+                        <input type="number" id="stuRoll" required class="w-full px-3 py-2 border border-slate-300 rounded-xl">
+                    </div>
+                    <div>
+                        <label class="block font-semibold text-slate-700 mb-1">ইউনিক আইডি (UID)</label>
+                        <input type="text" id="stuUid" class="w-full px-3 py-2 border border-slate-300 rounded-xl" placeholder="যেমন: 26061001">
+                    </div>
+                </div>
+                <div>
+                    <label class="block font-semibold text-slate-700 mb-1">শিক্ষার্থীর নাম *</label>
+                    <input type="text" id="stuName" required class="w-full px-3 py-2 border border-slate-300 rounded-xl" placeholder="শিক্ষার্থীর পূর্ণ নাম">
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block font-semibold text-slate-700 mb-1">পিতার নাম</label>
+                        <input type="text" id="stuFather" class="w-full px-3 py-2 border border-slate-300 rounded-xl">
+                    </div>
+                    <div>
+                        <label class="block font-semibold text-slate-700 mb-1">মাতার নাম</label>
+                        <input type="text" id="stuMother" class="w-full px-3 py-2 border border-slate-300 rounded-xl">
+                    </div>
+                </div>
+                <div>
+                    <label class="block font-semibold text-slate-700 mb-1">মোবাইল নম্বর</label>
+                    <input type="text" id="stuMobile" class="w-full px-3 py-2 border border-slate-300 rounded-xl" placeholder="০১৭XXXXXXXX">
+                </div>
+                <div>
+                    <label class="block font-semibold text-slate-700 mb-1">স্থায়ী ঠিকানা</label>
+                    <textarea id="stuAddress" rows="2" class="w-full px-3 py-2 border border-slate-300 rounded-xl" placeholder="গ্রাম, ডাকঘর, উপজেলা, জেলা"></textarea>
+                </div>
+                <div class="flex justify-end gap-2 pt-3 border-t">
+                    <button type="button" onclick="closeStudentModal()" class="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-800 rounded-xl font-semibold">বাতিল</button>
+                    <button type="submit" class="px-5 py-2 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl font-semibold">সংরক্ষণ করুন</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // =========================================================================
+        // 1. PRE-LOADED DATA: CLASS 6 (155 STUDENTS FROM UPLOADED EXCEL)
+        // =========================================================================
+        const RAW_CLASS_6_STUDENTS = [
+            [1,"জুনায়েদ ইসলাম সালমান","26061001","মো: আজিজুল ইসলাম","রিমা বেগম","০১৭১৮২৫১৬৫৪","গ্রাম: দক্ষিণ ফুলবাড়ি, ডাক: ফেঞ্চুগঞ্জ-৩১১৬, উপজেলা: ফেঞ্চুগঞ্জ, জেলা: সিলেট"],
+            [2,"মোঃ ফুলন","26061002","আকুল মিয়া","হাজেরা বেগম","০১৭৬৩৭৫৫৪৫৮","গ্রাম: পিঠাইটিকর, ডাক: ফেঞ্চুগঞ্জ, উপজেলা: ফেঞ্চুগঞ্জ, জেলা: সিলেট"],
+            [3,"মহসিন আহমদ রিয়াদ","26061003","ফয়ছল আহমদ","জুঁই বেগম","০১৬০৯৩৫৯৮৩০","গ্রাম: মুক্তাজিপুর, ডাক: ভুকশিমইল, উপজেলা: কুলাউড়া, জেলা: মৌলভীবাজার"],
+            [4,"মোঃ মাহবুব হাসান সাহান","26061004","মোঃ হামছার আলী","হুসনে আরা বেগম মিলা","০১৭৯৬৪৪১২১৭","গ্রাম: কায়স্থগ্রাম, ডাক: ফেঞ্চুগঞ্জ, উপজেলা: ফেঞ্চুগঞ্জ, জেলা: সিলেট"],
+            [5,"মোঃ আলী হাসান","26061005","মোঃ চুন্নু মিয়া","লাইলী বেগম","০১৬২৪০৬২৯৭০","গ্রাম: ছত্তিশ, ডাক: ফেঞ্চুগঞ্জ, উপজেলা: ফেঞ্চুগঞ্জ, জেলা: সিলেট"],
+            [6,"মোঃ ইব্রাহিম হোসেন তানজিদ","26061006","মোঃ হাফিজুর রহমান","তানিয়া বেগম","০১৩১৬০৫৫০৫১","গ্রাম: রাঙ্গা মিয়ার গলি, ডাক: খুলনা সিটি, উপজেলা: খুলনা সিটি করপোরেশন, জেলা: খুলনা"],
+            [7,"মেহদী হাসান রিয়াদ","26061007","মোঃ আব্দুল মুতালিব","হেলেনা আক্তার মিলি","০১৭৪২৮২৯৫৯৩","গ্রাম: লামাগঙ্গাপুর, ডাক: ফেঞ্চুগঞ্জ, উপজেলা: ফেঞ্চুগঞ্জ, জেলা: সিলেট"],
+            [8,"আনোয়ার হোসেন","26061008","বাবুল আহমদ","ছানা বেগম","০১৩২৭৭৮১৫১০","গ্রাম: টাহারবহর, ডাক: পূর্ব গৌরিপুর, উপজেলা: বালাগঞ্জ, জেলা: সিলেট"],
+            [9,"ছাইদুল ইসলাম","26061009","মোঃ খসরু মিয়া","মোছাঃ দিলারা বেগম","০১৮৭২৯৮৮২৮৬","গ্রাম: ছত্তিশ, ডাক: ফেঞ্চুগঞ্জ, উপজেলা: ফেঞ্চুগঞ্জ, জেলা: সিলেট"],
+            [10,"মোঃ আদনান হোসাইন","26061010","মোঃ বেলাল হোসেন","রাজিয়া বেগম","০১৭১৭০১৯১৪৩","গ্রাম: নিজ ছত্তিশ, ডাক: ফেঞ্চুগঞ্জ, উপজেলা: ফেঞ্চুগঞ্জ, জেলা: সিলেট"],
+            [11,"আব্দুল্লাহ আল আবিদ","26061011","ছানুর মিয়া","শিল্পি বেগম","০১৭৪৪৮৬৯৬৪৮","গ্রাম: ছত্তিশ, ডাক: ফেঞ্চুগঞ্জ, উপজেলা: ফেঞ্চুগঞ্জ, জেলা: সিলেট"],
+            [12,"জাওয়াদুর রহমান","26061012","বাবুল মিয়া","ছালমা বেগম","০১৭৯৩৪৩৪৫০৫","গ্রাম: মাইজগাঁও, ডাক: ফেঞ্চুগঞ্জ, উপজেলা: ফেঞ্চুগঞ্জ, জেলা: সিলেট"],
+            [13,"ইমন মিয়া","26061013","মোঃ সিরাজ মিয়া","মোসাঃ সমিতা বেগম","০১৭২০৩৭৪৪২৩","গ্রাম: চান্দপুর, ডাক: ফেঞ্চুগঞ্জ, উপজেলা: ফেঞ্চুগঞ্জ, জেলা: সিলেট"],
+            [14,"আশরাফুল ইসলাম জিবান","26061014","কালা মিয়া","শেফালি বেগম","০১৩২০৯৭৩৩৮৭","গ্রাম: উত্তর ইসলামপুর, ডাক: ফেঞ্চুগঞ্জ, উপজেলা: ফেঞ্চুগঞ্জ, জেলা: সিলেট"],
+            [15,"মোঃ ফেরদৌস হাসান মাহী","26061015","মোঃ ছুটন মিয়া","মোছাঃ তাহমিনা খানম মনি","০১৩২০৬৯৫৯৪১","গ্রাম: মল্লিকপুর, ডাক: ফেঞ্চুগঞ্জ, উপজেলা: ফেঞ্চুগঞ্জ, জেলা: সিলেট"],
+            [16,"আহমদ ইশফাক","26061016","সাব্বির আহমদ","রুকশানা বেগম","","গ্রাম: কুচারপাড়া, ডাক: সিলেট, উপজেলা: সিলেট সদর, জেলা: সিলেট"],
+            [17,"মোঃ আশরাফুল আহমদ","26061017","মোঃ বাবুল মিয়া","মোছাঃ সালমা বেগম","০১৭১৫৯২৬৫১৪","গ্রাম: ছত্তিশ, ডাক: ফেঞ্চুগঞ্জ, উপজেলা: ফেঞ্চুগঞ্জ, জেলা: সিলেট"],
+            [18,"আবু সাইদ হানিফ","26061018","মোঃ আবুল হোসেন","হ্যাপি বেগম","০১৭১৮১৯৭৪৩২","গ্রাম: বাদেদেউলী, ডাক: ঘিলাছড়া, উপজেলা: ফেঞ্চুগঞ্জ, জেলা: সিলেট"],
+            [19,"তাওহীদ ইসলাম ইব্রাহিম","26061019","মোঃ আলকাছ মিয়া","সাজনা বেগম","০১৮৫৫৩০১৫৫৪","গ্রাম: কে, এম টিলা, ডাক: ফেঞ্চুগঞ্জ, উপজেলা: ফেঞ্চুগঞ্জ, জেলা: সিলেট"],
+            [20,"ইয়ামিনুল হাসান","26061020","মোঃ ফজলুর রহমান","শারমিন আক্তার","০১৭১৮২৯৮২৬১","গ্রাম: যুধিষ্টিপুর, ডাক: ঘিলাছড়া, উপজেলা: ফেঞ্চুগঞ্জ, জেলা: সিলেট"],
+            [21,"মোঃ আব্দুল্লাহ আল আমিন","26061021","মোঃ কুতুক উদ্দিন","জাছমিন আক্তার","০১৭২২১১২৮৫৭","গ্রাম: সুজানগর, ডাক: সুজানগর, উপজেলা: বড়লেখা, জেলা: মৌলভীবাজার"],
+            [22,"মোজাম্মিল আহমদ","26061022","লুবান মিয়া","মোছাঃ হাবিবা সুলতানা রিজু","০১৩২১৬৭৪৯৫৭","গ্রাম: পিঠাইটিকর, ডাক: ফেঞ্চুগঞ্জ, উপজেলা: ফেঞ্চুগঞ্জ, জেলা: সিলেট"],
+            [23,"আতিকুর রহমান শিহাব","26061023","জসিম উদ্দিন","রহিমা বেগম","০১৭১৮৩২৯২৬৩","গ্রাম: চাঁনপুর, ডাক: ফেঞ্চুগঞ্জ, উপজেলা: ফেঞ্চুগঞ্জ, জেলা: সিলেট"],
+            [24,"রিয়াদুল ইসলাম তামিম","26061024","মোঃ রেকি আহমদ","তাজিলা আক্তার","০১৭৯৫৩২৯৭৮৫","গ্রাম: কে, এম টিলা, ডাক: ফেঞ্চুগঞ্জ, উপজেলা: ফেঞ্চুগঞ্জ, জেলা: সিলেট"],
+            [25,"মাহির সারেওয়ার ফারহান","26061025","ইফতেখার আহমদ","মোছাঃ আতিকা বেগম","০১৭৪৯২২৪৭৫০","গ্রাম: ছত্তিশ, ডাক: ফেঞ্চুগঞ্জ, উপজেলা: ফেঞ্চুগঞ্জ, জেলা: সিলেট"],
+            [26,"মোঃ মাবরুর হোসাইন রুহান","26061026","মোঃ আলী হোসাইন","রুহেনা বেগম","০১৭৪৩৯২০৫৭৩","গ্রাম: পিঠাইটিকর, ডাক: ফেঞ্চুগঞ্জ, উপজেলা: ফেঞ্চুগঞ্জ, জেলা: সিলেট"],
+            [27,"আব্দুল্লাহ","26061027","হাবিবুল্লাহ","শিবলী","০১৩০১২৩১৩৮৫","গ্রাম: ছত্তিশ, ডাক: ফেঞ্চুগঞ্জ, উপজেলা: ফেঞ্চুগঞ্জ, জেলা: সিলেট"],
+            [28,"মোঃ গোলাম জাকারিয়া অভি","26061028","মোঃ গোলাম আজম","রেহেনা বেগম","০১৭২৬৫৩৬০৮৫","গ্রাম: ছত্তিশ, ডাক: ফেঞ্চুগঞ্জ, উপজেলা: ফেঞ্চুগঞ্জ, জেলা: সিলেট"],
+            [29,"মোঃ রেদওয়ান আহমদ মাছুম","26061029","মোঃ মাসুক আহমদ","ছাদিয়া আক্তার সিপা","০১৭৬৪২৩১৬৮৩","গ্রাম: পিঠাইটিকর, ডাক: ফেঞ্চুগঞ্জ, উপজেলা: ফেঞ্চুগঞ্জ, জেলা: সিলেট"],
+            [30,"আবির হোসেন রাফি","26061030","মোঃ আলী হোসেন","মোছাঃ ইলিমা বেগম","০১৭১০৩৬১৬১৩","গ্রাম: ছত্তিশ, ডাক: ফেঞ্চুগঞ্জ, উপজেলা: ফেঞ্চুগঞ্জ, জেলা: সিলেট"],
+            [31,"রেদোয়ান ইসলাম সিয়াম","26061031","মোহাম্মদ সফিক মিয়া","মোছাঃ জেসমিন আক্তার","০১৩০০২৫০৪৫৩","গ্রাম: মাইজগাঁও, ডাক: ফেঞ্চুগঞ্জ, উপজেলা: ফেঞ্চুগঞ্জ, জেলা: সিলেট"],
+            [32,"মোঃ নাহিদ হাসান জাকারিয়া","26061032","মাহবুবুর রহমান","নাজমা বেগম","০১৭১৪৭৬০১১১","গ্রাম: বাঘারপার, ডাক: কান্দিগাঁও, উপজেলা: সিলেট সদর, জেলা: সিলেট"],
+            [33,"মাজেদ আহমদ","26061033","শামীম আহমদ","রায়মন আক্তার","০১৯৮৩০৩৫৬৯৯","গ্রাম: বাদেদেউলী, ডাক: বাদেদেউলী, উপজেলা: ফেঞ্চুগঞ্জ, জেলা: সিলেট"],
+            [34,"শাওন আহমদ","26061034","সেজনু মিয়া","সাহিনা বেগম","০১৭৯৫০৫৯৮৪১","গ্রাম: কুরবানপুর, ডাক: ইসলামগঞ্জ বাজার, উপজেলা: কুলাউড়া, জেলা: সিলেট"],
+            [35,"মোঃ আরিয়ান উদ্দিন","26061035","মোঃ আপ্তাব উদ্দীন","সিরা জুন","০১৩১৪৮৭৮৩৫৭","গ্রাম: ছত্তিশ, ডাক: ফেঞ্চুগঞ্জ, উপজেলা: ফেঞ্চুগঞ্জ, জেলা: সিলেট"],
+            [36,"আকীব আল হাসান","26061036","মোঃ মিলন মিয়া","হাবিবা আক্তার","০১৭৭৪৪৪৮১৭৮","গ্রাম: মাইজগাঁও, ডাক: ফেঞ্চুগঞ্জ, উপজেলা: ফেঞ্চুগঞ্জ, জেলা: সিলেট"],
+            [37,"মোঃ মাহিন আহমদ","26061037","রামিজ হোসেন","রছনা বেগম","০১৭৯৪৫৩০৫৫৫","গ্রাম: পিঠাইটিকর, ডাক: ফেঞ্চুগঞ্জ, উপজেলা: ফেঞ্চুগঞ্জ, জেলা: সিলেট"],
+            [38,"ফারদুধাইয়ান মুয়াজ","26061038","আকুল মিয়া","ফাতেহা বেগম","০১৭৩৫২২৪১১৮","গ্রাম: কুতুবপুর, ডাক: উত্তর ফেঞ্চুগঞ্জ, উপজেলা: ফেঞ্চুগঞ্জ, জেলা: সিলেট"],
+            [39,"মোঃ আব্দুল হাফিজ","26061039","রাজন মিয়া","তাহরিম নাহার জবা","০১৬৪৬৮৭২৩৫৩","গ্রাম: লামাগঙ্গাপুর, ডাক: ফেঞ্চুগঞ্জ, উপজেলা: ফেঞ্চুগঞ্জ, জেলা: সিলেট"],
+            [40,"মোঃ বায়জীদ বোস্তামী","26061040","মোঃ কামাল উদ্দিন","তহুরা আক্তার","০১৩১০৩৪৮৫০০","গ্রাম: ইসলামপুর, ডাক: ফেঞ্চুগঞ্জ, উপজেলা: ফেঞ্চুগঞ্জ, জেলা: সিলেট"],
+            [41,"মুহাম্মদ রাইয়ান রামিম","26061041","মোহাম্মদ জাইন মিয়া","বেবি বেগম","০১৭২৭২৩৬৪২৫","গ্রাম: ফরিদপুর মাঝেরগাঁও, ডাক: এফ এফ ফ্যাক্টরী, উপজেলা: ফেঞ্চুগঞ্জ, জেলা: সিলেট"],
+            [42,"মোঃ রাইয়ান আহমদ আয়ান","26061042","মোঃ ফয়জুর রহমান","সায়মা জাছমিন","০১৯৮৬০৬৮৭৮৫","গ্রাম: ইসলামপুর, ডাক: ফেঞ্চুগঞ্জ, উপজেলা: ফেঞ্চুগঞ্জ, জেলা: সিলেট"],
+            [43,"ইয়ামিনুল ইসলাম মাহিম","26061043","জহিরুল ইসলাম কয়েছ","মাছুমা আক্তার এলিজা","০১৭৫৮৭৬৯৮৭৪","গ্রাম: ছত্তিশ, ডাক: ফেঞ্চুগঞ্জ, উপজেলা: ফেঞ্চুগঞ্জ, জেলা: সিলেট"],
+            [44,"মোঃ সাকিবুল ইসলাম","26061044","মোঃ আবুল কালাম","মোছাঃ কুলছুমা বেগম","০১৬১৬২১৬৭০০","গ্রাম: ছত্তিশ, ডাক: ফেঞ্চুগঞ্জ, উপজেলা: ফেঞ্চুগঞ্জ, জেলা: সিলেট"],
+            [45,"মিজান মিয়া","26061045","মোঃ আব্দুল কুদ্দুস","রুকসানা বেগম","০১৩০৬৬০৫০৬২","গ্রাম: পিঠাইটিকর, ডাক: ফেঞ্চুগঞ্জ, উপজেলা: ফেঞ্চুগঞ্জ, জেলা: সিলেট"],
+            [46,"সুলতানুল আরিফিন তাসকিন","26061046","মোঃ মইজ উদ্দিন","পাপিয়া বেগম","০১৭১৪৭৭৭২৯৪","গ্রাম: বাঘমারা, ডাক: ফেঞ্চুগঞ্জ, উপজেলা: ফেঞ্চুগঞ্জ, জেলা: সিলেট"],
+            [47,"মুহিদ আহমদ","26061047","হেলাল মিয়া","জায়েদা আক্তার","০১৭৫৪৭২৫৩৩০","গ্রাম: কে এম টিলা, ডাক: ফেঞ্চুগঞ্জ, উপজেলা: ফেঞ্চুগঞ্জ, জেলা: সিলেট"],
+            [48,"মাহমুদ বিল্লাহ","26061048","কবির আহমদ","শারমীন আক্তার দিবা","০১৭১৭৫৪২৬৩৮","গ্রাম: চাঁনপুর, ডাক: ফেঞ্চুগঞ্জ, উপজেলা: ফেঞ্চুগঞ্জ, জেলা: সিলেট"],
+            [49,"আরাফাত হোসাইন সায়েম","26061049","মোঃ কামাল উদ্দিন","মোছাঃ ফাতেমা বেগম","০১৭১৫৯৩০৩৯৬","গ্রাম: নুরপুর, ডাক: ভাদেশ্বর, উপজেলা: গোলাপগঞ্জ, জেলা: সিলেট"],
+            [50,"মোঃ আরিফুল ইসলাম অভি","26061050","মোঃ আনোয়ার মিয়া","মোছাঃ মুক্তা বেগম","০১৭৩৯৩১৯৭৩০","গ্রাম: ছত্তিশ, ডাক: ফেঞ্চুগঞ্জ, উপজেলা: ফেঞ্চুগঞ্জ, জেলা: সিলেট"],
+            [51,"মোঃ সায়মন হোসেন ছাফা","26061051","তারেক হোসেন ডালিম","রাসেদা আক্তার শাতি","০১৩১০৭৯৭৭১২","গ্রাম: পিঠাইটিকর, ডাক: ফেঞ্চুগঞ্জ, উপজেলা: ফেঞ্চুগঞ্জ, জেলা: সিলেট"],
+            [52,"আল হামদি","26061052","লিটন আহমদ লিলু","আয়েশা বেগম","০১৭৩৬৩৮৫৭০০","গ্রাম: মল্লিকপুর, ডাক: উত্তর ফেঞ্চুগঞ্জ, উপজেলা: ফেঞ্চুগঞ্জ, জেলা: সিলেট"],
+            [53,"মোঃ মাহবুবুর রহমান","26061053","মোঃ হবিবুল্লাহ","মোছাঃ সাজনা বেগম","০১৭৬৮৬৫৩১২৫","গ্রাম: ছত্তিশ, ডাক: ফেঞ্চুগঞ্জ, উপজেলা: ফেঞ্চুগঞ্জ, জেলা: সিলেট"],
+            [54,"সৈয়দ রাইয়ান রহমান","26061054","সৈয়দ মুজিবুর রহমান","সুলতানা আক্তার","","গ্রাম: রাজনপুর, ডাক: ফেঞ্চুগঞ্জ, উপজেলা: ফেঞ্চুগঞ্জ, জেলা: সিলেট"],
+            [55,"মোঃ মেহরাজ ইসলাম চৌধুরী","26061055","মোঃ ফখরুল ইসলাম চৌধুরী","মোছাঃ ফারহানা ইয়াছমিন চৌধুরী","০১৭২৬৮৮৫৩৮৯","গ্রাম: নুরপুর, ডাক: ফেঞ্চুগঞ্জ, উপজেলা: ফেঞ্চুগঞ্জ, জেলা: সিলেট"],
+            [56,"নুর আজাদী","26061056","আবু মিয়া","সুমি বেগম","০১৬৭১৮৭৬৩২০","গ্রাম: ছত্তিশ, ডাক: ফেঞ্চুগঞ্জ, উপজেলা: ফেঞ্চুগঞ্জ, জেলা: সিলেট"],
+            [57,"মোঃ শাফিউল আঈমান","26061057","মোঃ আতিকুর রহমান","হালিমা আক্তার","০১৭৯৫৪০৫৭৭৮","গ্রাম: পশ্চিম বাজার, ডাক: ফেঞ্চুগঞ্জ, উপজেলা: ফেঞ্চুগঞ্জ, জেলা: সিলেট"],
+            [58,"আব্দুল্লাহ","26061058","মোঃ মুকিতুল ইসলাম","সায়মা বেগম","০১৭৫৪৬৬১০১১","গ্রাম: ইসলামপুর, ডাক: ফেঞ্চুগঞ্জ, উপজেলা: ফেঞ্চুগঞ্জ, জেলা: সিলেট"],
+            [59,"তুহিন আহমদ","26061059","","","","গ্রাম: , ডাক: , উপজেলা: , জেলা:"],
+            [60,"আমির আহনাফ চৌধুরী","26061060","আমির সামাদ চৌধুরী","রুশমতুন বেগম","০১৭১০৫৮৮৩১৯","গ্রাম: নিজামপুর, ডাক: ফেঞ্চুগঞ্জ, উপজেলা: ফেঞ্চুগঞ্জ, জেলা: সিলেট"],
+            [61,"মাহের","26061061","মোঃ আব্দুল্লা","সেবিনা আক্তার","০১৭৯২৩২১০৭২","গ্রাম: রাজনপুর, ডাক: ফেঞ্চুগঞ্জ, উপজেলা: ফেঞ্চুগঞ্জ, জেলা: সিলেট"],
+            [62,"আরাফাত রহমান","26061062","জাবের মিয়া","ফাইমা বেগম","০১৭৪৩৮৬৫৭৯৩","গ্রাম: উত্তর আশিঘর, ডাক: যুধিষ্টিপুর, উপজেলা: ফেঞ্চুগঞ্জ, জেলা: সিলেট"],
+            [63,"মুজাহিদুল ইসলাম দ্বীন ইসলাম","26061063","মোঃ কালা মিয়া","রেহেনা বেগম","০১৯১৪৩৮৯০৮৬","গ্রাম: পিঠাইটিকর, ডাক: ফেঞ্চুগঞ্জ, উপজেলা: ফেঞ্চুগঞ্জ, জেলা: সিলেট"],
+            [64,"মোঃ আরাফাত আমিন","26061064","মোঃ রুহুল আমিন","দীপা বেগম","০১৭২০৯০৯৩৩০","গ্রাম: ছত্তিশ, ডাক: ফেঞ্চুগঞ্জ, উপজেলা: ফেঞ্চুগঞ্জ, জেলা: সিলেট"],
+            [65,"তায়েফ আহমদ তানিম","26061065","সামসুল ইসলাম","রুবিনা বেগম","০১৯৩৩৯০২৫৭৫","গ্রাম: ছত্তিশ, ডাক: ফেঞ্চুগঞ্জ, উপজেলা: ফেঞ্চুগঞ্জ, জেলা: সিলেট"],
+            [66,"সিয়াম আহমদ","26061066","আলী আহমদ","শিরিনা আক্তার","০১৬২১১৫৫১৭৭","গ্রাম: ইসলামপুর, ডাক: ফেঞ্চুগঞ্জ, উপজেলা: ফেঞ্চুগঞ্জ, জেলা: সিলেট"],
+            [67,"সেয়েব ইসলাম","26061067","জাহাঙ্গীর আলম","রুশনী বেগম","০১৭১৯৩০৮৯২৬","গ্রাম: রায়খাইল হদরপুর, ডাক: জালালপুর, উপজেলা: দক্ষিণ সুরমা, জেলা: সিলেট"],
+            [68,"রিদোয়ান আহমদ রিহান","26061068","সুহেল আহমদ","শিরিনা বেগম","০১৭৭৮০৮২০৭৭","গ্রাম: ছত্তিশ, ডাক: ফেঞ্চুগঞ্জ, উপজেলা: ফেঞ্চুগঞ্জ, জেলা: সিলেট"],
+            [69,"মাহিদ ইসলাম জিসান","26061069","জাহেদ আহমদ","ফারহানা আক্তার পলি","০১৭২৪০১১৪০৯","গ্রাম: তফাদার টিলা, ডাক: ফেঞ্চুগঞ্জ, উপজেলা: ফেঞ্চুগঞ্জ, জেলা: সিলেট"],
+            [70,"মোঃ সিয়াম আহমদ","26061070","কছরু মিয়া","নাছিমা বেগম","০১৭৬২৪৮৭৫৯৩","গ্রাম: ইটাখলা, ডাক: বরমচাল, উপজেলা: কুলাউড়া, জেলা: মৌলভীবাজার"],
+            [71,"আরিফ আহমদ","26061071","সুয়েব আহমদ","রুমানা আফরোজ","০১৭১৬৬৯০০১৭","গ্রাম: কায়স্থগ্রাম, ডাক: ফেঞ্চুগঞ্জ, উপজেলা: ফেঞ্চুগঞ্জ, জেলা: সিলেট"],
+            [72,"কামরুল হাসান","26061072","মোঃ আহাদ আলী","কচি বেগম","","গ্রাম: তফাদার টিলা, ডাক: ফেঞ্চুগঞ্জ, উপজেলা: ফেঞ্চুগঞ্জ, জেলা: সিলেট"],
+            [73,"সৈয়দ মাহদি হাসান","26061073","সৈয়দ মুরাদ আহমদ","সুমা জাহান","০১৭১৯২৩৪৩২২","গ্রাম: পূর্ব মুসলিমাবাদ, ডাক: পূর্ব গৌরিপুর, উপজেলা: বালাগঞ্জ, জেলা: সিলেট"],
+            [74,"মোঃ ইত্তেহাদ হোসেন","26061074","মোঃ মোশারফ হোসেন","সেলিনা আক্তার তফাদার","০১৭১৬৯৩৫৬২৩","গ্রাম: নিজ ছত্তিশ, ডাক: ফেঞ্চুগঞ্জ, উপজেলা: ফেঞ্চুগঞ্জ, জেলা: সিলেট"],
+            [75,"মোঃ আশরাফুল ইসলাম","26061075","মোঃ সফিক মিয়া","রাশেদা বেগম","০১৩৪২৭২৩৫৪৫","গ্রাম: সুরিখাল, ডাক: উত্তরভাগ, উপজেলা: রাজনগর, জেলা: মৌলভীবাজার"],
+            [76,"সাজিদুর রহমান","26061076","আব্দুল মালিক","সুমী বেগম","০১৭২৩৬৯৩১৪৩","গ্রাম: মৈশাষী, ডাক: দনারাম, উপজেলা: বালাগঞ্জ, জেলা: সিলেট"],
+            [77,"আব্দুর রহমান নুরাহীন","26061077","মোঃ আঃ আছিত","খালেদা আক্তার","","গ্রাম: ছত্তিশ, ডাক: ফেঞ্চুগঞ্জ, উপজেলা: ফেঞ্চুগঞ্জ, জেলা: সিলেট"],
+            [78,"মাসপি হাসান আরিয়ান","26061078","মোঃ আমির আলী","মাহমুদা বেগম","০১৭৭৩৯১২৩৬৬","গ্রাম: কে এম টিলা, ডাক: ফেঞ্চুগঞ্জ, উপজেলা: ফেঞ্চুগঞ্জ, জেলা: সিলেট"],
+            [79,"মোহাম্মদ মুকিদ হোসেন","26061079","মোঃ মিনু মিয়া","মোছাঃ রেশনা বেগম","০১৭২৪৭৯৬১৭৩","গ্রাম: ছত্তিশ, ডাক: ফেঞ্চুগঞ্জ, উপজেলা: ফেঞ্চুগঞ্জ, জেলা: সিলেট"],
+            [80,"ইয়াছিন আহমদ জিহাদ","26061080","মোহাম্মদ জাহাঙ্গীর আলম","মোছাঃ সুমেনা বেগম","০১৩০৬৯৫৩৩০৩","গ্রাম: নুরপুর, ডাক: ফেঞ্চুগঞ্জ, উপজেলা: ফেঞ্চুগঞ্জ, জেলা: সিলেট"],
+            [81,"সাফি আহমদ আবির","26061081","মিতন মিয়া","সাহেদা আক্তার","০১৩২৩১৯৬৪৫","গ্রাম: পাঠানটিলা, ডাক: ফেঞ্চুগঞ্জ, উপজেলা: ফেঞ্চুগঞ্জ, জেলা: সিলেট"],
+            [82,"মাহিন আহমদ","26061082","মোঃ ছালেক আহমদ","বিউটি বেগম","০১৩২১৬৭৫১৪১","গ্রাম: মোগলপুর, ডাক: ফেঞ্চুগঞ্জ, উপজেলা: ফেঞ্চুগঞ্জ, জেলা: সিলেট"],
+            [83,"অজিল ওয়াহিদ","26061083","মোহাম্মদ আব্দুল ওয়াহিদ সুমন","মিলি বেগম","","গ্রাম: কায়স্থগ্রাম, ডাক: ফেঞ্চুগঞ্জ, উপজেলা: ফেঞ্চুগঞ্জ, জেলা: সিলেট"],
+            [84,"নাফিউল ইসলাম রাফি","26061084","মোঃ নুরুল ইসলাম","সুমাইয়া ইসলাম সীমা","০১৬১৪১২৬৩৪১","গ্রাম: কায়স্থগ্রাম, ডাক: ফেঞ্চুগঞ্জ, উপজেলা: ফেঞ্চুগঞ্জ, জেলা: সিলেট"],
+            [85,"মোঃ হোসাইন আলম","26061085","মোঃ ফয়ছল আলম","তাহেরা বেগম","০১৭৮৩৮২১৭৪৭","গ্রাম: চক দৌলতপুর, ডাক: ফেঞ্চুগঞ্জ, উপজেলা: ফেঞ্চুগঞ্জ, জেলা: সিলেট"],
+            [86,"মাহফুজুর রহমান মাহফুজ","26061086","লিলু মিয়া","জবা আক্তার জেবা","০১৮২৭৮৪৮৮৩৪","গ্রাম: ছত্তিশ, ডাক: ফেঞ্চুগঞ্জ, উপজেলা: ফেঞ্চুগঞ্জ, জেলা: সিলেট"],
+            [87,"কাজী আকবর হোসাইন নাসিফ","26061087","কাজী মশকুর হোসাইন","হালিমা আক্তার হানিফা","০১৭১৯৮৪০১২৬","গ্রাম: কাজী বাড়ী, ডাক: ফেঞ্চুগঞ্জ, উপজেলা: ফেঞ্চুগঞ্জ, জেলা: সিলেট"],
+            [88,"মোঃ সায়েম আহমদ","26061088","রুবেল আহমদ","শিপা বেগম","০১৬৩১৬৬৯৮৪০","গ্রাম: বাঘমারা, ডাক: ফেঞ্চুগঞ্জ, উপজেলা: ফেঞ্চুগঞ্জ, জেলা: সিলেট"],
+            [89,"মোঃ মাসুদ আলী","26061089","মোঃ মোতাহির আলী","মোছাঃ শারমিন আক্তার","০১৭৫৪৩৪২৩৯৮","গ্রাম: দক্ষিণ রাউৎগাও, ডাক: বরমচাল, উপজেলা: কুলাউড়া, জেলা: মৌলভীবাজার"],
+            [90,"মোঃ মুসা আল সামি","26061090","মোঃ সাদিক মিয়া","মোছাঃ রেছমিন বেগম","","গ্রাম: পূর্ব যুদিষ্ঠিপুর, ডাক: ঘিলাছড়া, উপজেলা: ফেঞ্চুগঞ্জ, জেলা: সিলেট"],
+            [91,"তাহিয়ান চৌধুরী তানজীম","26061091","জামান চৌধুরী","তানিয়া আক্তার আছিয়া","০১৭৮১৪৩১১০১","গ্রাম: বকশিপুর, ডাক: উত্তরভাগ, উপজেলা: রাজনগর, জেলা: মৌলভীবাজার"],
+            [92,"নুরাইন আহমদ নাবিল","26061092","নুর আহমদ","বিউটি আক্তার","০১৬১৪১২০৯০৬","গ্রাম: ছত্তিশ, ডাক: ফেঞ্চুগঞ্জ, উপজেলা: ফেঞ্চুগঞ্জ, জেলা: সিলেট"],
+            [93,"জুবাইদ আহমদ পাবেল","26061093","মোঃ জাহেদ আহমদ","পারুল","০১৬১৩৫২৬৫৬৮","গ্রাম: ছত্তিশ, ডাক: ফেঞ্চুগঞ্জ, উপজেলা: ফেঞ্চুগঞ্জ, জেলা: সিলেট"],
+            [94,"মোঃ মাহসিন মিয়া","26061094","আরব আলী","চম্পা বেগম","০১৭৭২৩৫২৭৪০","গ্রাম: কে এম টিলা, ডাক: ফেঞ্চুগঞ্জ, উপজেলা: ফেঞ্চুগঞ্জ, জেলা: সিলেট"],
+            [95,"তাওহীদ ইসলাম","26061095","মোঃ বকুল মিয়া","মোছাঃ আরিফা আক্তার","০১৭৩১০৮২৬৬৭","গ্রাম: ছত্তিশ, ডাক: ফেঞ্চুগঞ্জ, উপজেলা: ফেঞ্চুগঞ্জ, জেলা: সিলেট"],
+            [96,"ছিয়াম আহম নবিন","26061096","উয়াসিম উদ্দীন","সোবিনা বেগম","০১৮১৫২২৮৫০৩","গ্রাম: ছত্তিশ, ডাক: ফেঞ্চুগঞ্জ, উপজেলা: ফেঞ্চুগঞ্জ, জেলা: সিলেট"],
+            [97,"মোঃ অনিক মিয়া","26061097","মোঃ মিনাজ মিয়া","ছাবিনা বেগম","০১৭৪৮৭৯৭৬১৩","গ্রাম: বাঘমারা, ডাক: ফেঞ্চুগঞ্জ, উপজেলা: ফেঞ্চুগঞ্জ, জেলা: সিলেট"],
+            [98,"মোঃ তাহের আলী","26061098","বাদশা মিয়া","শ্যামা বেগম","০১৭৫৬০৪৫৮৭৩","গ্রাম: ছত্তিশ, ডাক: ফেঞ্চুগঞ্জ, উপজেলা: ফেঞ্চুগঞ্জ, জেলা: সিলেট"],
+            [99,"মোঃ অহীদ","26061099","আজমল আলী","মর্জিনা বেগম","০১৩৩৬১৪৩৩৭০","গ্রাম: পিঠাইটিকর, ডাক: ফেঞ্চুগঞ্জ, উপজেলা: ফেঞ্চুগঞ্জ, জেলা: সিলেট"],
+            [100,"রেজোয়ান ইসলাম সাওম","26061100","মোহাম্মদ সফিক মিয়া","মোছাঃ জেসমিন আক্তার","০১৩১৪৪৬১৮৬৩","গ্রাম: মাইজগাঁও, ডাক: ফেঞ্চুগঞ্জ, উপজেলা: ফেঞ্চুগঞ্জ, জেলা: সিলেট"],
+            [101,"নাহিদুল ইসলাম","26061101","মোঃ নবিন মিয়া","সুমনা বেগম","০১৩০৫০৩৮৬৯৪","গ্রাম: পিঠাইটিকর, ডাক: ফেঞ্চুগঞ্জ, উপজেলা: ফেঞ্চুগঞ্জ, জেলা: সিলেট"],
+            [102,"আশরাফ হোসেন","26061102","মোঃ আশাদ আলী","মোছাঃ জায়দা বেগম","০১৭১৬৩৩৭০১০","গ্রাম: ছত্তিশ, ডাক: ফেঞ্চুগঞ্জ, উপজেলা: ফেঞ্চুগঞ্জ, জেলা: সিলেট"],
+            [103,"মিলাদ হোসাইন মিলু","26061103","বেলাল হোসেন","সালমা বেগম","০১৯১৬৬৭৬৯৯৯","গ্রাম: রেলকলনি, ডাক: ফেঞ্চুগঞ্জ, উপজেলা: ফেঞ্চুগঞ্জ, জেলা: সিলেট"],
+            [104,"ইশরাকুর রহমান ফাহিম","26061104","আবেদ আলী","মোছাঃ তাহমিনা বেগম","০১৭২৫৫৮৩৯১৫","গ্রাম: নোয়াগাঁও দনারাম, ডাক: উত্তর কুশিয়ারা, উপজেলা: ফেঞ্চুগঞ্জ, জেলা: সিলেট"],
+            [105,"সায়েম আহমদ","26061105","মোঃ জামিল হোসেন","শিল্পী বেগম","০১৭৪১৪৮০২৬৯","গ্রাম: ছত্তিশ, ডাক: ফেঞ্চুগঞ্জ, উপজেলা: ফেঞ্চুগঞ্জ, জেলা: সিলেট"],
+            [106,"শাহরিয়ার আহমদ তুহিন","26061106","কায়েদ মিয়া","ফাইমা বেগম","০১৩২২৫৩৮০৯৪","গ্রাম: বাঘমারা, ডাক: ফেঞ্চুগঞ্জ, উপজেলা: ফেঞ্চুগঞ্জ, জেলা: সিলেট"],
+            [107,"মোঃ ফারহান","26061107","মোঃ কিবরিয়া","সুরমিনা বেগম","০১৪০৩৪৭২৪০","গ্রাম: পিঠাইটিকর, ডাক: ফেঞ্চুগঞ্জ, উপজেলা: ফেঞ্চুগঞ্জ, জেলা: সিলেট"],
+            [108,"রাজ হোসনে মাশরাফি","26061108","মনির হোসেন","নাহিয়ান আফরোজ ডলি","০১৮৩৮৪৬৭০৮৩","গ্রাম: মল্লিকপুর, ডাক: ফেঞ্চুগঞ্জ, উপজেলা: ফেঞ্চুগঞ্জ, জেলা: সিলেট"],
+            [109,"সোহান আহমদ","26061109","মোহাম্মদ শপন","কবিতা বেগম","০১৭১৯৩০৮৯২৬","গ্রাম: মধ্য যুধিষ্টিপুর, ডাক: যুধিষ্টিপুর, উপজেলা: ফেঞ্চুগঞ্জ, জেলা: সিলেট"],
+            [110,"তাওহীদ","26061110","ফয়জুল হক","শিমলী বেগম","০১৭০১৮০০৮৯৭","গ্রাম: পিঠাইটিকর, ডাক: ফেঞ্চুগঞ্জ, উপজেলা: ফেঞ্চুগঞ্জ, জেলা: সিলেট"],
+            [111,"মীর হোসেন সাব্বির","26061111","আবুল বসর","রুনা বেগম","০১৭৮৮৫২০৫৮১","গ্রাম: পিঠাইটিকর, ডাক: ফেঞ্চুগঞ্জ, উপজেলা: ফেঞ্চুগঞ্জ, জেলা: সিলেট"],
+            [112,"সালমান আহমদ","26061112","মোহাম্মদ মুলমত মিয়া","শিফা বেগম","০১৭৯২৩০৬৩১৫","গ্রাম: বাঘমারা, ডাক: ফেঞ্চুগঞ্জ, উপজেলা: ফেঞ্চুগঞ্জ, জেলা: সিলেট"],
+            [113,"মাহমুদ হোসাইন রায়হান","26061113","মোঃ হোসাইন আহমদ","লুৎফা বেগম","০১৭৩৫৪৬৮৫৬০","গ্রাম: বাঘমারা, ডাক: ফেঞ্চুগঞ্জ, উপজেলা: ফেঞ্চুগঞ্জ, জেলা: সিলেট"],
+            [114,"আরিয়ান আহমদ ঈসান","26061114","মিনহাজ উদ্দীন","মাসকুদা বেগম","০১৭৫৬৩১১৫০৮","গ্রাম: ছত্তিশ, ডাক: ফেঞ্চুগঞ্জ, উপজেলা: ফেঞ্চুগঞ্জ, জেলা: সিলেট"],
+            [115,"আরিফুল জামান স্বাধীন","26061115","মিলন মিয়া","মিনা বেগম","০১৩৪৪৪০৮৫৮১","গ্রাম: রাজনপুর, ডাক: ফেঞ্চুগঞ্জ, উপজেলা: ফেঞ্চুগঞ্জ, জেলা: সিলেট"],
+            [116,"মোঃ রিমান হোসেন","26061116","মোঃ বুরহান উদ্দিন","রুজিনা বেগম","০১৭২০১৮৭০২৩","গ্রাম: পশ্চিম বাজার, ডাক: ফেঞ্চুগঞ্জ, উপজেলা: ফেঞ্চুগঞ্জ, জেলা: সিলেট"],
+            [117,"ইয়ামীন আহমদ","26061117","মোঃ জায়েদ হোসেন","মোছাঃ রচনা বেগম","০১৮১২৮৪৫৮৫৪","গ্রাম: ছত্তিশ, ডাক: ফেঞ্চুগঞ্জ, উপজেলা: ফেঞ্চুগঞ্জ, জেলা: সিলেট"],
+            [118,"হোসাইন আহমদ সায়িফ","26061118","ফয়েজ উদ্দীন","মোছাঃ ডলি বেগম","০১৩০৫৮৭৭৯৮০","গ্রাম: সুড়িগাঁও, ডাক: দাউদপুর, উপজেলা: দক্ষিণ সুরমা, জেলা: সিলেট"],
+            [119,"দিদান আহমদ","26061119","মোঃ জাহাঙ্গীর আহমদ","ছানী বেগম","০১৭৫২১৯৪৮৯৮","গ্রাম: ছত্তিশ, ডাক: ফেঞ্চুগঞ্জ, উপজেলা: ফেঞ্চুগঞ্জ, জেলা: সিলেট"],
+            [120,"সাফিউল আলম","26061120","সুনু মিয়া","নিবারুন বেগম","০১৪০৩২০৯৫৭৯","গ্রাম: ছত্তিশ, ডাক: ফেঞ্চুগঞ্জ, উপজেলা: ফেঞ্চুগঞ্জ, জেলা: সিলেট"],
+            [121,"শেখ মোঃ মাহদি হাসান নাহিম","26061121","শেখ মোঃ মাসুক মিয়া","রেহেনা বেগম চৌধুরী","০১৭৫১৩৮৫২৭০","গ্রাম: নান্দিউরা, ডাক: রাজনগর, উপজেলা: রাজনগর, জেলা: মৌলভীবাজার"],
+            [122,"ছাইদ আহমদ","26061122","ছালিক মিয়া","শেলী বেগম","০১৬০০৫২৪৩৩৮","গ্রাম: ছত্তিশ, ডাক: ফেঞ্চুগঞ্জ, উপজেলা: ফেঞ্চুগঞ্জ, জেলা: সিলেট"],
+            [123,"আহমেদ নাবিল","26061123","আলঙ্গীর হোসেন পাপল","রাহেলা আক্তার ফারজানা","","গ্রাম: ছত্তিশ, ডাক: ফেঞ্চুগঞ্জ, উপজেলা: ফেঞ্চুগঞ্জ, জেলা: সিলেট"],
+            [124,"মোঃ ইফতেখার ইসলাম নুহাদ","26061124","মোঃ আরিফুল ইসলাম","জাকিয়া সুলতানা","০১৭৭৩৮৬৮৫৭৫","গ্রাম: রতনগঞ্জ, ডাক: রতনগঞ্জ, উপজেলা: কুলাউড়া, জেলা: মৌলভীবাজার"],
+            [125,"রিদোওয়ান আহমদ","26061125","সাবু মিয়া","নাজমা বেগম","০১৭৮১৫৭৯৯৫০","গ্রাম: পিঠাইটিকর, ডাক: ফেঞ্চুগঞ্জ, উপজেলা: ফেঞ্চুগঞ্জ, জেলা: সিলেট"],
+            [126,"তাওহিদুল ইসলাম সানি","26061126","সাইফুল ইসলাম মিনহাজ","ফারজানা বেগম","০১৭৭২৫৮১৮৪০","গ্রাম: ইসলামপুর, ডাক: ফেঞ্চুগঞ্জ, উপজেলা: ফেঞ্চুগঞ্জ, জেলা: সিলেট"],
+            [127,"সাইফুল ইসলাম সানি","26061127","আব্দুস সামাদ","হুসনা বেগম","০১৬১০৬৩১৭৩৬","গ্রাম: পিঠাইটিকর, ডাক: ফেঞ্চুগঞ্জ, উপজেলা: ফেঞ্চুগঞ্জ, জেলা: সিলেট"],
+            [128,"ফখর উদ্দিন আহমদ নাবিল","26061128","মোঃ আব্দুল আলী","হেপি বেগম","০১৭৪০৩৪২১৮৯","গ্রাম: মাইজগাঁও, ডাক: ফেঞ্চুগঞ্জ, উপজেলা: ফেঞ্চুগঞ্জ, জেলা: সিলেট"],
+            [129,"মোঃ সায়েম মিয়া","26061129","মোঃ কুদ্দুস মিয়া","রুমা বেগম","০১৩১০২৩৪৫৪৮","গ্রাম: আলীনগর, ডাক: ফেঞ্চুগঞ্জ, উপজেলা: ফেঞ্চুগঞ্জ, জেলা: সিলেট"],
+            [130,"তানজিল ফয়েজী","26061130","ফয়জুল ইসলাম ফয়েজ","মোছাঃ হাজেরা বেগম","০১৭২৬৫৩৬১৯৭","গ্রাম: ইলাশপুর, ডাক: ফেঞ্চুগঞ্জ, উপজেলা: ফেঞ্চুগঞ্জ, জেলা: সিলেট"],
+            [131,"মোঃ তাহমিদ উস সামাদ","26061131","মোঃ আব্দুল আহাদ","সৈয়দা ঝরনা বেগম","০১৭৫৮৭৫৮৮৭২","গ্রাম: কায়স্থগ্রাম সিদ্দেক আলী, ডাক: ফেঞ্চুগঞ্জ, উপজেলা: ফেঞ্চুগঞ্জ, জেলা: সিলেট"],
+            [132,"মোঃ সাইফ উদ্দিন","26061132","মোঃ আছলম উদ্দিন","রাবিয়া বেগম","০১৭৪০০৭০২১৬","গ্রাম: ফুলবাড়ী, ডাক: ফেঞ্চুগঞ্জ, উপজেলা: ফেঞ্চুগঞ্জ, জেলা: সিলেট"],
+            [133,"হাবিবুর রহমান সাকিব","26061133","জাহাঙ্গীর আলম","আলফিনা আক্তার","০১৩০৫৮৯০০৮৯","গ্রাম: শেরপুর, ডাক: বাউন্ডডুরা, উপজেলা: শায়েস্তাগঞ্জ, জেলা: হবিগঞ্জ"],
+            [134,"জুবের হোসেন","26061134","মজনু মিয়া","জেছমিন বেগম","০১৭৭০৪৬৯৯৮১","গ্রাম: দক্ষিণ ধারণ, ডাক: ফেঞ্চুগঞ্জ, উপজেলা: ফেঞ্চুগঞ্জ, জেলা: সিলেট"],
+            [135,"শফর উদ্দিন রিয়াদ","26061135","খঞ্চু মিয়া","জোছনা বেগম","০১৭৪৭১৪৫৫২০","গ্রাম: কে এম টিলা, ডাক: ফেঞ্চুগঞ্জ, উপজেলা: ফেঞ্চুগঞ্জ, জেলা: সিলেট"],
+            [136,"ইয়ামিন আহমদ","26061136","মোঃ জয়নাল মিয়া","জহুরা বেগম","০১৭১৯২৩৪২৪৬","গ্রাম: কে.এম টিলা, ডাক: ফেঞ্চুগঞ্জ, উপজেলা: ফেঞ্চুগঞ্জ, জেলা: সিলেট"],
+            [137,"জাকারিয়া ইসলাম ফাহিম","26061137","সুহেল আহমদ","ফারজানা আক্তার","০১৭৬২৩৯১০০৪","গ্রাম: কায়স্থগ্রাম সিদ্দেক আলী, ডাক: ফেঞ্চুগঞ্জ, উপজেলা: ফেঞ্চুগঞ্জ, জেলা: সিলেট"],
+            [138,"মোঃ মাহবুবুল হক","26061138","মোঃ মারুফুল হক","মোছাঃ মনি বেগম","০১৭৮৯৩৯৮৩৩৮","গ্রাম: উত্তর বরগ, ডাক: বুল্লা, উপজেলা: মাধবপুর, জেলা: হবিগঞ্জ"],
+            [139,"উসামা রাহিম মাহদি","26061139","মোঃ আব্দুর রহিম","আমিনা বেগম","০১৭২৯৭৮২৮৩২","গ্রাম: শাহাপুর, ডাক: টিলাগাঁও, উপজেলা: কুলাউড়া, জেলা: মৌলভীবাজার"],
+            [140,"মোঃ মাসুদুল ইসলাম রাফি","26061140","মোঃ ফখরুর ইসলাম","জোসনা","০১৭২৭৪১৮৬১৮","গ্রাম: দক্ষিন ফুল বাড়ি, ডাক: ফেঞ্চুগঞ্জ, উপজেলা: ফেঞ্চুগঞ্জ, জেলা: সিলেট"],
+            [141,"নাজিম আহমদ সাদি","26061141","আছকির মিয়া","রেজিয়া সুলতানা","০১৭৩০২৫৩৭০৬","গ্রাম: শরিফগঞ্জ, ডাক: ফেঞ্চুগঞ্জ, উপজেলা: ফেঞ্চুগঞ্জ, জেলা: সিলেট"],
+            [142,"আহসান হাবিব","26061142","জুনেদ আহমদ","সুনেরা বেগম","০১৭৫৬৩৬৩৮৫৯","গ্রাম: কে. এম টিলা, ডাক: ফেঞ্চুগঞ্জ, উপজেলা: ফেঞ্চুগঞ্জ, জেলা: সিলেট"],
+            [143,"রাহিম মিয়া","26061143","ফারুক মিয়া","ইয়াছমিন বেগম","০১৭৪০৩৭৪৯৫১","গ্রাম: দক্ষিণ ফুল বাড়ি, ডাক: ফেঞ্চুগঞ্জ, উপজেলা: ফেঞ্চুগঞ্জ, জেলা: সিলেট"],
+            [144,"আহসানুর রহমান","26061144","তুহিন মিয়া","সাকেরা বেগম","০১৩১৬৬৩৪৪৫২","গ্রাম: দক্ষিণ ফুল বাড়ি, ডাক: ফেঞ্চুগঞ্জ, উপজেলা: ফেঞ্চুগঞ্জ, জেলা: সিলেট"],
+            [145,"ওবায়দুল্লাহ মোঃ তোফায়েল","26061145","মোঃ আব্দুল মালিক কাজল","শিউলী বেগম","০১৭১৮২২৩০২৪","গ্রাম: কায়স্থগ্রাম, ডাক: ফেঞ্চুগঞ্জ, উপজেলা: ফেঞ্চুগঞ্জ, জেলা: সিলেট"],
+            [146,"তাওহীদ তফাদার","26061146","রুফন","মাজেদা বেগম","০১৭৪৭১৪০৭৪৩","গ্রাম: দক্ষিণ ফুল বাড়ি, ডাক: ফেঞ্চুগঞ্জ, উপজেলা: ফেঞ্চুগঞ্জ, জেলা: সিলেট"],
+            [147,"তাহসান আল তাহমিদ","26061147","সাতির আহমদ","মোছাঃ হেলন বেগম","০১৭৪২৫৩২০৩৯","গ্রাম: পুরানগাঁও, ডাক: ফেঞ্চুগঞ্জ, উপজেলা: ফেঞ্চুগঞ্জ, জেলা: সিলেট"],
+            [148,"তওসীফ আরাফাত","26061148","আসকির আলী","সাহানারা বেগম","০১৭৩১৯২৩৬৫৭","গ্রাম: পুরানগাঁও, ডাক: ফেঞ্চুগঞ্জ, উপজেলা: ফেঞ্চুগঞ্জ, জেলা: সিলেট"],
+            [149,"ইব্রাহিম আহমদ","26061149","মাহবুব হোসেন","দিলারা আক্তার সুমি","০১৭১৯১৫০২০৭","গ্রাম: পুরানগাঁও, ডাক: ফেঞ্চুগঞ্জ, উপজেলা: ফেঞ্চুগঞ্জ, জেলা: সিলেট"],
+            [150,"ওয়াসিল আহমদ","26061150","মোঃ ইসমাইল হোসেন","রিপা বেগম","০১৮৭৬৯৫৮৩৮৬","গ্রাম: ডেমারগ্রাম, ডাক: সড়কের বাজার, উপজেলা: জকিগঞ্জ, জেলা: সিলেট"],
+            [151,"আব্দুল আজিজ মুহিন","26061151","আব্দুল জব্বার সজল","মোছাঃ রিপা আক্তার বকস","০১৭৪১৬১৪০২২","গ্রাম: কায়স্থগ্রাম, ডাক: ফেঞ্চুগঞ্জ, উপজেলা: ফেঞ্চুগঞ্জ, জেলা: সিলেট"],
+            [152,"আশরাফুল ইসলাম","26061152","মোঃ নুরুল ইসলাম","রুহেলা বেগম","০১৩০২২৯১৮৬৩","গ্রাম: কায়স্থগ্রাম, ডাক: ফেঞ্চুগঞ্জ, উপজেলা: ফেঞ্চুগঞ্জ, জেলা: সিলেট"],
+            [153,"মোহাম্মদ নাফিজুর রহমান শারিয়ান","26061153","মোহাম্মদ সুহাগ আহমদ","নাদিরা আক্তার","০১৩৪৫৯০৭৮৬৮","গ্রাম: ছত্তিশ, ডাক: ফেঞ্চুগঞ্জ, উপজেলা: ফেঞ্চুগঞ্জ, জেলা: সিলেট"],
+            [154,"মাকছুদ আহমদ","26061154","ছাব্বির আহমদ","শাহানারা আক্তার","","গ্রাম: আলীনগর, ডাক: বরমচাল, উপজেলা: কুলাউড়া, জেলা: মৌলভীবাজার"],
+            [155,"আরাফাত ইসলাম","26061155","বাবলু মিয়া","নিলিমা আক্তার আখি","০১৭৫৪৬৭২৮২৩","গ্রাম: ছত্তিশ, ডাক: ফেঞ্চুগঞ্জ, উপজেলা: ফেঞ্চুগঞ্জ, জেলা: সিলেট"]
+        ];
+
+        // Default Madrasah Subjects by Class Level
+        function getDefaultSubjects(className) {
+            const ibtedayiJunior = [
+                { id: 's1', name: 'কুরআন মাজিদ ও তাজভিদ', full: 100, pass: 33 },
+                { id: 's2', name: 'আকাইদ ও ফিকহ', full: 100, pass: 33 },
+                { id: 's3', name: 'আদ-দুরুসুল আরাবিয়্যাহ', full: 100, pass: 33 },
+                { id: 's4', name: 'বাংলা', full: 100, pass: 33 },
+                { id: 's5', name: 'ইংরেজি', full: 100, pass: 33 },
+                { id: 's6', name: 'গণিত', full: 100, pass: 33 }
+            ];
+            const ibtedayiSenior = [
+                ...ibtedayiJunior,
+                { id: 's7', name: 'বাংলাদেশ ও বিশ্বপরিচয় এবং বিজ্ঞান', full: 100, pass: 33 }
+            ];
+            const dakhilLower = [
+                { id: 's1', name: 'কুরআন মাজিদ ও তাজভিদ', full: 100, pass: 33 },
+                { id: 's2', name: 'আকাইদ ও ফিকহ', full: 100, pass: 33 },
+                { id: 's3', name: 'আল-লুগাতুল আরাবিয়্যাতুল ইত্তিসালিয়্যাহ', full: 100, pass: 33 },
+                { id: 's4', name: 'কাওয়াইদুল লুগাতিল আরাবিয়্যাহ', full: 100, pass: 33 },
+                { id: 's5', name: 'বাংলা', full: 100, pass: 33 },
+                { id: 's6', name: 'ইংরেজি', full: 100, pass: 33 },
+                { id: 's7', name: 'গণিত', full: 100, pass: 33 },
+                { id: 's8', name: 'সাধারণ বিজ্ঞান', full: 100, pass: 33 },
+                { id: 's9', name: 'বাংলাদেশ ও বিশ্বপরিচয়', full: 100, pass: 33 },
+                { id: 's10', name: 'তথ্য ও যোগাযোগ প্রযুক্তি (ICT)', full: 50, pass: 17 }
+            ];
+            const dakhilUpper = [
+                { id: 's1', name: 'কুরআন মাজিদ ও তাজভিদ', full: 100, pass: 33 },
+                { id: 's2', name: 'হাদিস শরীফ', full: 100, pass: 33 },
+                { id: 's3', name: 'আকাইদ ও ফিকহ', full: 100, pass: 33 },
+                { id: 's4', name: 'আরবি ১ম পত্র', full: 100, pass: 33 },
+                { id: 's5', name: 'আরবি ২য় পত্র', full: 100, pass: 33 },
+                { id: 's6', name: 'বাংলা ১ম ও ২য় পত্র', full: 100, pass: 33 },
+                { id: 's7', name: 'ইংরেজি ১ম ও ২য় পত্র', full: 100, pass: 33 },
+                { id: 's8', name: 'সাধারণ গণিত', full: 100, pass: 33 },
+                { id: 's9', name: 'ইসলামের ইতিহাস', full: 100, pass: 33 },
+                { id: 's10', name: 'তথ্য ও যোগাযোগ প্রযুক্তি (ICT)', full: 50, pass: 17 }
+            ];
+
+            if (['১ম শ্রেণি', '২য় শ্রেণি', '৩য় শ্রেণি'].includes(className)) return JSON.parse(JSON.stringify(ibtedayiJunior));
+            if (['৪র্থ শ্রেণি', '৫ম শ্রেণি'].includes(className)) return JSON.parse(JSON.stringify(ibtedayiSenior));
+            if (['৬ষ্ঠ শ্রেণি', '৭ম শ্রেণি', '৮ম শ্রেণি'].includes(className)) return JSON.parse(JSON.stringify(dakhilLower));
+            return JSON.parse(JSON.stringify(dakhilUpper));
+        }
+
+        // =========================================================================
+        // 2. APPLICATION STATE & STORAGE (১ম - ১০ম শ্রেণি: বালক ও বালিকা শাখা)
+        // =========================================================================
+        const STORAGE_KEY = 'fmk_madrasah_result_system_v2';
+        const OLD_STORAGE_KEY_V1 = 'fmk_madrasah_result_system_v1';
+        const ALL_CLASSES = ['১ম শ্রেণি', '২য় শ্রেণি', '৩য় শ্রেণি', '৪র্থ শ্রেণি', '৫ম শ্রেণি', '৬ষ্ঠ শ্রেণি', '৭ম শ্রেণি', '৮ম শ্রেণি', '৯ম শ্রেণি', '১০ম শ্রেণি'];
+        const ALL_BRANCHES = ['বালক শাখা', 'বালিকা শাখা'];
+
+        function makeClassBranchKey(cls, branch) {
+            return `${cls}__${branch}`;
+        }
+
+        function getCurrentClassBranchKey() {
+            return makeClassBranchKey(appState.currentClass, appState.currentBranch);
+        }
+
+        function getCurrentClassBranchLabel() {
+            return `${appState.currentClass} (${appState.currentBranch})`;
+        }
+
+        let appState = {
+            currentClass: '৬ষ্ঠ শ্রেণি',
+            currentBranch: 'বালক শাখা',
+            currentExam: 'বার্ষিক পরীক্ষা-২০২৬',
+            session: '২০২৬',
+            studentsByClassBranch: {},
+            subjectsByClassBranch: {},
+            marksData: {} // key: `${className}__${branchName}__${examName}` -> { [uidOrRoll]: { [subjectId]: number } }
+        };
+
+        function initApp() {
+            const saved = localStorage.getItem(STORAGE_KEY);
+            if (saved) {
+                try {
+                    appState = JSON.parse(saved);
+                } catch (e) {
+                    console.error("Storage parse error, initializing fresh", e);
+                    seedInitialData();
+                }
+            } else {
+                const oldSaved = localStorage.getItem(OLD_STORAGE_KEY_V1);
+                seedInitialData();
+                if (oldSaved) {
+                    try {
+                        const v1 = JSON.parse(oldSaved);
+                        if (v1.studentsByClass) {
+                            ALL_CLASSES.forEach(cls => {
+                                const cbKey = makeClassBranchKey(cls, 'বালক শাখা');
+                                if (v1.studentsByClass[cls] && v1.studentsByClass[cls].length > 0) {
+                                    appState.studentsByClassBranch[cbKey] = v1.studentsByClass[cls];
+                                }
+                                if (v1.subjectsByClass && v1.subjectsByClass[cls]) {
+                                    appState.subjectsByClassBranch[cbKey] = v1.subjectsByClass[cls];
+                                }
+                            });
+                        }
+                        if (v1.marksData) {
+                            Object.keys(v1.marksData).forEach(oldKey => {
+                                const parts = oldKey.split('__');
+                                if (parts.length === 2) {
+                                    appState.marksData[`${parts[0]}__বালক শাখা__${parts[1]}`] = v1.marksData[oldKey];
+                                }
+                            });
+                        }
+                        saveState();
+                    } catch (e) {}
+                }
+            }
+
+            if (!appState.currentBranch || !ALL_BRANCHES.includes(appState.currentBranch)) {
+                appState.currentBranch = 'বালক শাখা';
+            }
+            if (!appState.studentsByClassBranch) appState.studentsByClassBranch = {};
+            if (!appState.subjectsByClassBranch) appState.subjectsByClassBranch = {};
+            if (!appState.marksData) appState.marksData = {};
+
+            // Ensure all 10 classes x 2 branches exist
+            ALL_CLASSES.forEach(cls => {
+                ALL_BRANCHES.forEach(branch => {
+                    const cbKey = makeClassBranchKey(cls, branch);
+                    if (!appState.studentsByClassBranch[cbKey]) appState.studentsByClassBranch[cbKey] = [];
+                    if (!appState.subjectsByClassBranch[cbKey]) appState.subjectsByClassBranch[cbKey] = getDefaultSubjects(cls);
+                });
+            });
+
+            // Sync UI selectors
+            document.getElementById('globalClassSelect').value = appState.currentClass;
+            document.getElementById('globalBranchSelect').value = appState.currentBranch;
+            document.getElementById('globalExamSelect').value = appState.currentExam;
+            document.getElementById('globalSessionInput').value = appState.session || '২০২৬';
+
+            refreshAllViews();
+        }
+
+        function seedInitialData() {
+            appState.studentsByClassBranch = {};
+            appState.subjectsByClassBranch = {};
+            appState.marksData = {};
+
+            ALL_CLASSES.forEach(cls => {
+                ALL_BRANCHES.forEach(branch => {
+                    const cbKey = makeClassBranchKey(cls, branch);
+                    appState.studentsByClassBranch[cbKey] = [];
+                    appState.subjectsByClassBranch[cbKey] = getDefaultSubjects(cls);
+                });
+            });
+
+            // Load 155 boys into ৬ষ্ঠ শ্রেণি (বালক শাখা)
+            const class6BoysKey = makeClassBranchKey('৬ষ্ঠ শ্রেণি', 'বালক শাখা');
+            appState.studentsByClassBranch[class6BoysKey] = RAW_CLASS_6_STUDENTS.map(row => ({
+                roll: row[0],
+                name: row[1],
+                uid: String(row[2]),
+                father: row[3],
+                mother: row[4],
+                mobile: row[5],
+                address: row[6]
+            }));
+
+            saveState();
+        }
+
+        function saveState() {
+            try {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(appState));
+            } catch (e) {
+                showToast('সতর্কতা: ব্রাউজার স্টোরেজ পূর্ণ হয়ে গেছে!', 'error');
+            }
+        }
+
+        // =========================================================================
+        // 3. BANGLA / ENGLISH NUMBER CONVERSION & GRADING LOGIC
+        // =========================================================================
+        const bnDigits = ['০', '১', '২', '৩', '৪', '৫', '৬', '৭', '৮', '৯'];
+        function toBn(num) {
+            if (num === null || num === undefined || num === '') return '';
+            return String(num).replace(/\d/g, d => bnDigits[d]);
+        }
+
+        function toEnNumber(str) {
+            if (str === null || str === undefined || str === '') return NaN;
+            const cleaned = String(str).trim().replace(/[০-৯]/g, d => bnDigits.indexOf(d));
+            if (cleaned === '') return NaN;
+            return Number(cleaned);
+        }
+
+        function calculateSubjectGrade(mark, fullMarks, passMarks) {
+            if (mark === null || mark === undefined || isNaN(mark)) {
+                return { lg: '-', gp: 0, passed: false, entered: false };
+            }
+            if (mark < passMarks) {
+                return { lg: 'F', gp: 0.00, passed: false, entered: true };
+            }
+            const pct = (mark / fullMarks) * 100;
+            if (pct >= 80) return { lg: 'A+', gp: 5.00, passed: true, entered: true };
+            if (pct >= 70) return { lg: 'A', gp: 4.00, passed: true, entered: true };
+            if (pct >= 60) return { lg: 'A-', gp: 3.50, passed: true, entered: true };
+            if (pct >= 50) return { lg: 'B', gp: 3.00, passed: true, entered: true };
+            if (pct >= 40) return { lg: 'C', gp: 2.00, passed: true, entered: true };
+            if (pct >= 33) return { lg: 'D', gp: 1.00, passed: true, entered: true };
+            return { lg: 'F', gp: 0.00, passed: false, entered: true };
+        }
+
+        function getOverallGradeFromGPA(gpa, isPassed) {
+            if (!isPassed || gpa < 1.00) return 'F';
+            if (gpa >= 5.00) return 'A+';
+            if (gpa >= 4.00) return 'A';
+            if (gpa >= 3.50) return 'A-';
+            if (gpa >= 3.00) return 'B';
+            if (gpa >= 2.00) return 'C';
+            return 'D';
+        }
+
+        function getExamKey() {
+            return `${appState.currentClass}__${appState.currentBranch}__${appState.currentExam}`;
+        }
+
+        function getStudentKey(stu) {
+            return stu.uid ? String(stu.uid) : `roll_${stu.roll}`;
+        }
+
+        // Compute full results & merit positions for current class & exam
+        function computeClassResults() {
+            const cls = appState.currentClass;
+            const students = appState.studentsByClassBranch[getCurrentClassBranchKey()] || [];
+            const subjects = appState.subjectsByClassBranch[getCurrentClassBranchKey()] || [];
+            const examMarks = appState.marksData[getExamKey()] || {};
+            const totalFullMarks = subjects.reduce((sum, s) => sum + Number(s.full || 100), 0);
+
+            const results = students.map(stu => {
+                const sKey = getStudentKey(stu);
+                const sMarks = examMarks[sKey] || {};
+                let totalObtained = 0;
+                let totalGP = 0;
+                let failCount = 0;
+                let enteredCount = 0;
+                const subjectDetails = {};
+
+                subjects.forEach(sub => {
+                    const rawMark = sMarks[sub.id];
+                    const numMark = (rawMark !== undefined && rawMark !== '' && !isNaN(Number(rawMark))) ? Number(rawMark) : NaN;
+                    const gradeInfo = calculateSubjectGrade(numMark, Number(sub.full), Number(sub.pass));
+                    if (gradeInfo.entered) {
+                        enteredCount++;
+                        totalObtained += numMark;
+                        totalGP += gradeInfo.gp;
+                        if (!gradeInfo.passed) failCount++;
+                    } else {
+                        failCount++;
+                    }
+                    subjectDetails[sub.id] = {
+                        mark: isNaN(numMark) ? '' : numMark,
+                        ...gradeInfo
+                    };
+                });
+
+                const appeared = enteredCount > 0;
+                const isPassed = appeared && (failCount === 0) && (enteredCount === subjects.length);
+                const gpa = (appeared && isPassed && subjects.length > 0) ? Number((totalGP / subjects.length).toFixed(2)) : 0.00;
+                const overallGrade = appeared ? getOverallGradeFromGPA(gpa, isPassed) : '-';
+
+                return {
+                    student: stu,
+                    subjectDetails,
+                    totalFullMarks,
+                    totalObtained,
+                    gpa,
+                    overallGrade,
+                    isPassed,
+                    appeared,
+                    failCount: appeared ? failCount : subjects.length,
+                    meritPosition: null
+                };
+            });
+
+            // Calculate Merit Position among appeared students
+            const appearedList = [...results].filter(r => r.appeared);
+            appearedList.sort((a, b) => {
+                if (a.isPassed !== b.isPassed) return a.isPassed ? -1 : 1;
+                if (a.isPassed && b.isPassed) {
+                    if (b.gpa !== a.gpa) return b.gpa - a.gpa;
+                    if (b.totalObtained !== a.totalObtained) return b.totalObtained - a.totalObtained;
+                    return a.student.roll - b.student.roll;
+                } else {
+                    if (a.failCount !== b.failCount) return a.failCount - b.failCount;
+                    if (b.totalObtained !== a.totalObtained) return b.totalObtained - a.totalObtained;
+                    return a.student.roll - b.student.roll;
+                }
+            });
+
+            appearedList.forEach((item, idx) => {
+                item.meritPosition = idx + 1;
+            });
+
+            return results;
+        }
+
+        // =========================================================================
+        // 4. NAVIGATION & CONTEXT HANDLERS
+        // =========================================================================
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab-view').forEach(el => el.classList.add('hidden'));
+            document.getElementById(`view-${tabName}`).classList.remove('hidden');
+
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                btn.classList.remove('bg-amber-400', 'text-emerald-950', 'shadow');
+                btn.classList.add('text-emerald-100', 'hover:bg-emerald-800');
+            });
+            const activeBtn = document.getElementById(`tab-${tabName}`);
+            activeBtn.classList.remove('text-emerald-100', 'hover:bg-emerald-800');
+            activeBtn.classList.add('bg-amber-400', 'text-emerald-950', 'shadow');
+
+            if (tabName === 'dashboard') renderDashboard();
+            if (tabName === 'students') renderStudentsTable();
+            if (tabName === 'subjects') renderSubjectsConfig();
+            if (tabName === 'marks') renderMarksEntryTable();
+            if (tabName === 'tabulation') renderTabulationTable();
+            if (tabName === 'reportcard') populateReportStudentDropdown();
+        }
+
+        function handleContextChange() {
+            appState.currentClass = document.getElementById('globalClassSelect').value;
+            appState.currentBranch = document.getElementById('globalBranchSelect').value;
+            appState.currentExam = document.getElementById('globalExamSelect').value;
+            appState.session = document.getElementById('globalSessionInput').value || '২০২৬';
+            saveState();
+            refreshAllViews();
+        }
+
+        function refreshAllViews() {
+            const cbKey = getCurrentClassBranchKey();
+            const fullLabel = getCurrentClassBranchLabel();
+            const exam = appState.currentExam;
+            const students = appState.studentsByClassBranch[cbKey] || [];
+
+            document.getElementById('navStudentCount').textContent = toBn(students.length);
+            document.getElementById('dashClassTitle').textContent = fullLabel;
+            document.getElementById('dashExamTitle').textContent = exam;
+            document.getElementById('dashContextSubtitle').textContent = `${fullLabel}-এ বর্তমানে ${toBn(students.length)} জন শিক্ষার্থী নিবন্ধিত আছে। ১ম থেকে ১০ম শ্রেণি পর্যন্ত সকল শ্রেণির বালক ও বালিকা শাখার তথ্য আলাদাভাবে সংরক্ষিত থাকে।`;
+            document.getElementById('stuClassLabel').textContent = fullLabel;
+            document.getElementById('subClassLabel').textContent = fullLabel;
+            document.getElementById('marksClassLabel').textContent = fullLabel;
+            document.getElementById('marksExamLabel').textContent = exam;
+
+            renderDashboard();
+            renderStudentsTable();
+            renderSubjectsConfig();
+            renderMarksEntryTable();
+            renderTabulationTable();
+            populateReportStudentDropdown();
+        }
+
+        // =========================================================================
+        // 5. DASHBOARD RENDERING
+        // =========================================================================
+        function renderDashboard() {
+            const results = computeClassResults();
+            const total = results.length;
+            const appeared = results.filter(r => r.appeared);
+            const passed = appeared.filter(r => r.isPassed);
+            const failed = appeared.filter(r => !r.isPassed);
+            const gpa5 = passed.filter(r => r.gpa === 5.00);
+            const passRate = appeared.length > 0 ? ((passed.length / appeared.length) * 100).toFixed(1) : '0';
+
+            document.getElementById('kpiTotalStudents').textContent = toBn(total);
+            document.getElementById('kpiAppeared').textContent = toBn(appeared.length);
+            document.getElementById('kpiPassed').textContent = toBn(passed.length);
+            document.getElementById('kpiFailed').textContent = toBn(failed.length);
+            document.getElementById('kpiPassRate').textContent = toBn(passRate) + '%';
+            document.getElementById('kpiGpa5').textContent = toBn(gpa5.length);
+
+            // Grade Bars
+            const grades = ['A+', 'A', 'A-', 'B', 'C', 'D', 'F'];
+            const colors = {
+                'A+': 'bg-emerald-600', 'A': 'bg-emerald-500', 'A-': 'bg-teal-500',
+                'B': 'bg-blue-500', 'C': 'bg-indigo-500', 'D': 'bg-amber-500', 'F': 'bg-rose-500'
+            };
+            const barsContainer = document.getElementById('gradeDistributionBars');
+            barsContainer.innerHTML = '';
+
+            grades.forEach(g => {
+                const count = appeared.filter(r => r.overallGrade === g).length;
+                const pct = appeared.length > 0 ? Math.round((count / appeared.length) * 100) : 0;
+                barsContainer.innerHTML += `
+                    <div class="flex items-center gap-3 text-xs">
+                        <span class="w-8 font-bold text-slate-700">${g}</span>
+                        <div class="flex-1 bg-slate-100 rounded-full h-4 overflow-hidden">
+                            <div class="${colors[g]} h-full rounded-full transition-all duration-500" style="width: ${pct}%"></div>
+                        </div>
+                        <span class="w-16 text-right font-semibold text-slate-600">${toBn(count)} (${toBn(pct)}%)</span>
+                    </div>
+                `;
+            });
+
+            // Top 5 Merit Table
+            const top5 = [...appeared]
+                .filter(r => r.isPassed)
+                .sort((a, b) => a.meritPosition - b.meritPosition)
+                .slice(0, 5);
+
+            const top5Body = document.getElementById('dashTop5Body');
+            if (top5.length === 0) {
+                top5Body.innerHTML = `<tr><td colspan="5" class="p-6 text-center text-slate-400 text-xs">এখনও কোনো উত্তীর্ণ ফলাফল পাওয়া যায়নি। নম্বর এন্ট্রি করুন অথবা "নমুনা নম্বর বসিয়ে ফলাফল দেখুন" বাটনে ক্লিক করুন।</td></tr>`;
+            } else {
+                top5Body.innerHTML = top5.map(r => `
+                    <tr class="hover:bg-slate-50">
+                        <td class="p-2.5 font-bold text-emerald-700">#${toBn(r.meritPosition)}</td>
+                        <td class="p-2.5 font-semibold">${toBn(r.student.roll)}</td>
+                        <td class="p-2.5 font-medium text-slate-800">${r.student.name}</td>
+                        <td class="p-2.5 text-center font-bold">${toBn(r.totalObtained)}</td>
+                        <td class="p-2.5 text-center"><span class="px-2 py-0.5 bg-emerald-100 text-emerald-800 rounded-full font-bold">${toBn(r.gpa.toFixed(2))}</span></td>
+                    </tr>
+                `).join('');
+            }
+        }
+
+        // =========================================================================
+        // 6. STUDENT MANAGEMENT & EXCEL IMPORT/EXPORT
+        // =========================================================================
+        function renderStudentsTable() {
+            const cls = appState.currentClass;
+            const list = appState.studentsByClassBranch[getCurrentClassBranchKey()] || [];
+            const query = (document.getElementById('studentSearchInput').value || '').toLowerCase().trim();
+
+            const filtered = list.filter(s => {
+                if (!query) return true;
+                return String(s.roll).includes(query) ||
+                       toBn(s.roll).includes(query) ||
+                       (s.name && s.name.toLowerCase().includes(query)) ||
+                       (s.uid && String(s.uid).toLowerCase().includes(query)) ||
+                       (s.father && s.father.toLowerCase().includes(query)) ||
+                       (s.mobile && String(s.mobile).includes(query));
+            });
+
+            document.getElementById('filteredStudentCount').textContent = toBn(filtered.length);
+            const tbody = document.getElementById('studentsTableBody');
+
+            if (filtered.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="7" class="p-8 text-center text-slate-400">এই শ্রেণিতে কোনো শিক্ষার্থী পাওয়া যায়নি। নতুন শিক্ষার্থী যোগ করুন অথবা এক্সেল ফাইল ইমপোর্ট করুন।</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = filtered.map((stu) => {
+                const originalIdx = list.indexOf(stu);
+                return `
+                    <tr class="hover:bg-emerald-50/40 transition">
+                        <td class="p-3 text-center font-bold text-emerald-900">${toBn(stu.roll)}</td>
+                        <td class="p-3 font-semibold text-slate-800">${stu.name}</td>
+                        <td class="p-3 font-mono text-xs text-slate-600">${stu.uid || '-'}</td>
+                        <td class="p-3 text-xs">
+                            <div><span class="text-slate-500">পিতা:</span> ${stu.father || '-'}</div>
+                            <div><span class="text-slate-500">মাতা:</span> ${stu.mother || '-'}</div>
+                        </td>
+                        <td class="p-3 text-xs font-medium text-slate-700">${stu.mobile || '-'}</td>
+                        <td class="p-3 text-xs text-slate-600 max-w-xs">${stu.address || '-'}</td>
+                        <td class="p-3 text-center">
+                            <button onclick="openStudentModal(${originalIdx})" class="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg" title="সম্পাদনা">
+                                <i class="fa-solid fa-pen"></i>
+                            </button>
+                            <button onclick="deleteStudent(${originalIdx})" class="p-1.5 text-rose-600 hover:bg-rose-50 rounded-lg ml-1" title="মুছুন">
+                                <i class="fa-solid fa-trash"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function openStudentModal(index = -1) {
+            const modal = document.getElementById('studentModal');
+            document.getElementById('editStudentIndex').value = index;
+            if (index >= 0) {
+                const stu = appState.studentsByClassBranch[getCurrentClassBranchKey()][index];
+                document.getElementById('studentModalTitle').textContent = 'শিক্ষার্থীর তথ্য সম্পাদনা';
+                document.getElementById('stuRoll').value = stu.roll;
+                document.getElementById('stuUid').value = stu.uid || '';
+                document.getElementById('stuName').value = stu.name;
+                document.getElementById('stuFather').value = stu.father || '';
+                document.getElementById('stuMother').value = stu.mother || '';
+                document.getElementById('stuMobile').value = stu.mobile || '';
+                document.getElementById('stuAddress').value = stu.address || '';
+            } else {
+                const list = appState.studentsByClassBranch[getCurrentClassBranchKey()] || [];
+                const nextRoll = list.length > 0 ? Math.max(...list.map(s => Number(s.roll) || 0)) + 1 : 1;
+                document.getElementById('studentModalTitle').textContent = `নতুন শিক্ষার্থী যোগ (${getCurrentClassBranchLabel()})`;
+                document.getElementById('stuRoll').value = nextRoll;
+                document.getElementById('stuUid').value = '';
+                document.getElementById('stuName').value = '';
+                document.getElementById('stuFather').value = '';
+                document.getElementById('stuMother').value = '';
+                document.getElementById('stuMobile').value = '';
+                document.getElementById('stuAddress').value = '';
+            }
+            modal.classList.remove('hidden');
+        }
+
+        function closeStudentModal() {
+            document.getElementById('studentModal').classList.add('hidden');
+        }
+
+        function saveStudentForm(e) {
+            e.preventDefault();
+            const idx = Number(document.getElementById('editStudentIndex').value);
+            const studentObj = {
+                roll: Number(document.getElementById('stuRoll').value),
+                uid: document.getElementById('stuUid').value.trim(),
+                name: document.getElementById('stuName').value.trim(),
+                father: document.getElementById('stuFather').value.trim(),
+                mother: document.getElementById('stuMother').value.trim(),
+                mobile: document.getElementById('stuMobile').value.trim(),
+                address: document.getElementById('stuAddress').value.trim()
+            };
+
+            const list = appState.studentsByClassBranch[getCurrentClassBranchKey()];
+            if (idx >= 0) {
+                list[idx] = studentObj;
+                showToast('শিক্ষার্থীর তথ্য হালনাগাদ করা হয়েছে।');
+            } else {
+                list.push(studentObj);
+                list.sort((a, b) => a.roll - b.roll);
+                showToast('নতুন শিক্ষার্থী সফলভাবে যোগ করা হয়েছে।');
+            }
+
+            saveState();
+            closeStudentModal();
+            refreshAllViews();
+        }
+
+        function deleteStudent(idx) {
+            const list = appState.studentsByClassBranch[getCurrentClassBranchKey()];
+            const removed = list.splice(idx, 1);
+            saveState();
+            refreshAllViews();
+            showToast(`"${removed[0].name}"-এর তথ্য মুছে ফেলা হয়েছে।`);
+        }
+
+        // Excel Import tailored to Admission Book format & generic Excel sheets
+        function handleExcelImport(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, { type: 'array' });
+                    const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+                    const rows = XLSX.utils.sheet_to_json(firstSheet, { header: 1, defval: '' });
+
+                    const importedStudents = [];
+                    rows.forEach((row) => {
+                        if (!row || row.length < 2) return;
+                        const col0 = toEnNumber(row[0]);
+                        const col1 = String(row[1] || '').trim();
+                        if (!isNaN(col0) && col0 > 0 && col1 && !col1.includes('শিক্ষার্থীর নাম')) {
+                            const uid = String(row[2] || '').trim();
+                            const guardianRaw = String(row[3] || '');
+                            const addressRaw = String(row[4] || '').replace(/\r?\n/g, ', ').trim();
+
+                            // Parse Father, Mother, Mobile if combined in col 3
+                            let father = '', mother = '', mobile = '';
+                            if (guardianRaw.includes('পিতা:') || guardianRaw.includes('মাতা:')) {
+                                const fMatch = guardianRaw.match(/পিতা:\s*([^\n\r,]+)/);
+                                const mMatch = guardianRaw.match(/মাতা:\s*([^\n\r,]+)/);
+                                const mobMatch = guardianRaw.match(/মোবা:\s*([^\n\r,]+)/);
+                                father = fMatch ? fMatch[1].trim() : '';
+                                mother = mMatch ? mMatch[1].trim() : '';
+                                mobile = mobMatch ? mobMatch[1].trim() : '';
+                            } else {
+                                father = guardianRaw.trim();
+                                mother = String(row[4] || '').trim();
+                                mobile = String(row[5] || '').trim();
+                            }
+
+                            importedStudents.push({
+                                roll: col0,
+                                name: col1,
+                                uid: uid,
+                                father: father,
+                                mother: mother,
+                                mobile: mobile,
+                                address: addressRaw
+                            });
+                        }
+                    });
+
+                    if (importedStudents.length === 0) {
+                        showToast('এক্সেল ফাইলে সঠিক ফরম্যাটের শিক্ষার্থী তথ্য পাওয়া যায়নি।', 'error');
+                        return;
+                    }
+
+                    appState.studentsByClassBranch[getCurrentClassBranchKey()] = importedStudents;
+                    saveState();
+                    refreshAllViews();
+                    showToast(`${getCurrentClassBranchLabel()}-এ সফলভাবে ${toBn(importedStudents.length)} জন শিক্ষার্থী ইমপোর্ট হয়েছে!`);
+                } catch (err) {
+                    console.error(err);
+                    showToast('এক্সেল ফাইল পড়তে সমস্যা হয়েছে।', 'error');
+                }
+            };
+            reader.readAsArrayBuffer(file);
+            event.target.value = '';
+        }
+
+        function exportStudentsToExcel() {
+            const cls = appState.currentClass;
+            const list = appState.studentsByClassBranch[getCurrentClassBranchKey()] || [];
+            const wsData = [
+                ['ক্রম', 'শিক্ষার্থীর নাম', 'ইউনিক আইডি', 'পিতার নাম', 'মাতার নাম', 'মোবাইল', 'স্থায়ী ঠিকানা']
+            ];
+            list.forEach(s => {
+                wsData.push([s.roll, s.name, s.uid, s.father, s.mother, s.mobile, s.address]);
+            });
+            const wb = XLSX.utils.book_new();
+            const ws = XLSX.utils.aoa_to_sheet(wsData);
+            XLSX.utils.book_append_sheet(wb, ws, `${appState.currentClass}_${appState.currentBranch}`.slice(0, 31));
+            XLSX.writeFile(wb, `Students_${appState.currentClass}_${appState.currentBranch}_${appState.session}.xlsx`);
+        }
+
+        // =========================================================================
+        // 7. SUBJECTS CONFIGURATION
+        // =========================================================================
+        function renderSubjectsConfig() {
+            const cls = appState.currentClass;
+            const subjects = appState.subjectsByClassBranch[getCurrentClassBranchKey()] || [];
+            const tbody = document.getElementById('subjectsConfigBody');
+
+            tbody.innerHTML = subjects.map((sub, i) => `
+                <tr>
+                    <td class="p-2 text-center font-bold text-slate-600">${toBn(i + 1)}</td>
+                    <td class="p-2">
+                        <input type="text" value="${sub.name}" data-idx="${i}" data-field="name" class="sub-cfg-input w-full px-2.5 py-1.5 border border-slate-300 rounded-lg text-sm font-medium">
+                    </td>
+                    <td class="p-2">
+                        <input type="number" value="${sub.full}" data-idx="${i}" data-field="full" class="sub-cfg-input w-full px-2 py-1.5 border border-slate-300 rounded-lg text-sm text-center font-semibold">
+                    </td>
+                    <td class="p-2">
+                        <input type="number" value="${sub.pass}" data-idx="${i}" data-field="pass" class="sub-cfg-input w-full px-2 py-1.5 border border-slate-300 rounded-lg text-sm text-center font-semibold">
+                    </td>
+                    <td class="p-2 text-center">
+                        <button onclick="removeSubjectRow(${i})" class="text-rose-600 hover:bg-rose-50 p-1.5 rounded-lg">
+                            <i class="fa-solid fa-trash"></i>
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function addSubjectRow() {
+            const cls = appState.currentClass;
+            const list = appState.subjectsByClassBranch[getCurrentClassBranchKey()];
+            list.push({
+                id: 'sub_' + Date.now(),
+                name: 'নতুন বিষয়',
+                full: 100,
+                pass: 33
+            });
+            renderSubjectsConfig();
+        }
+
+        function removeSubjectRow(idx) {
+            const cls = appState.currentClass;
+            appState.subjectsByClassBranch[getCurrentClassBranchKey()].splice(idx, 1);
+            renderSubjectsConfig();
+        }
+
+        function saveSubjectsConfig() {
+            const cls = appState.currentClass;
+            const inputs = document.querySelectorAll('.sub-cfg-input');
+            const list = appState.subjectsByClassBranch[getCurrentClassBranchKey()];
+
+            inputs.forEach(inp => {
+                const idx = Number(inp.dataset.idx);
+                const field = inp.dataset.field;
+                if (list[idx]) {
+                    list[idx][field] = field === 'name' ? inp.value.trim() : Number(inp.value);
+                }
+            });
+
+            saveState();
+            refreshAllViews();
+            showToast(`${getCurrentClassBranchLabel()}-এর বিষয় ও মানবণ্টন সংরক্ষিত হয়েছে।`);
+        }
+
+        function resetDefaultSubjectsForClass() {
+            const cls = appState.currentClass;
+            appState.subjectsByClassBranch[getCurrentClassBranchKey()] = getDefaultSubjects(cls);
+            saveState();
+            refreshAllViews();
+            showToast('ডিফল্ট মাদরাসা বিষয়সমূহ ফিরিয়ে আনা হয়েছে।');
+        }
+
+        // =========================================================================
+        // 8. MARKS ENTRY SPREADSHEET
+        // =========================================================================
+        function renderMarksEntryTable() {
+            const cls = appState.currentClass;
+            const students = appState.studentsByClassBranch[getCurrentClassBranchKey()] || [];
+            const subjects = appState.subjectsByClassBranch[getCurrentClassBranchKey()] || [];
+            const query = (document.getElementById('marksSearchInput').value || '').toLowerCase().trim();
+
+            const thead = document.getElementById('marksEntryThead');
+            thead.innerHTML = `
+                <tr>
+                    <th class="p-2.5 text-center w-14 sticky left-0 bg-emerald-900 z-20">রোল</th>
+                    <th class="p-2.5 min-w-[170px] sticky left-14 bg-emerald-900 z-20">শিক্ষার্থীর নাম</th>
+                    ${subjects.map(s => `<th class="p-2 text-center min-w-[95px] border-l border-emerald-800">${s.name}<br><span class="text-[10px] text-amber-300 font-normal">(পূর্ণমান: ${toBn(s.full)})</span></th>`).join('')}
+                    <th class="p-2.5 text-center bg-emerald-950 border-l border-emerald-700">মোট</th>
+                    <th class="p-2.5 text-center bg-emerald-950">GPA</th>
+                    <th class="p-2.5 text-center bg-emerald-950">গ্রেড</th>
+                </tr>
+            `;
+
+            const results = computeClassResults();
+            const filtered = results.filter(r => {
+                if (!query) return true;
+                return String(r.student.roll).includes(query) ||
+                       toBn(r.student.roll).includes(query) ||
+                       r.student.name.toLowerCase().includes(query);
+            });
+
+            const tbody = document.getElementById('marksEntryTbody');
+            if (filtered.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="${subjects.length + 5}" class="p-8 text-center text-slate-400">কোনো শিক্ষার্থী পাওয়া যায়নি।</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = filtered.map(res => {
+                const stu = res.student;
+                const sKey = getStudentKey(stu);
+                return `
+                    <tr class="hover:bg-slate-50" id="row_${sKey}">
+                        <td class="p-2 text-center font-bold text-slate-700 sticky left-0 bg-white border-r">${toBn(stu.roll)}</td>
+                        <td class="p-2 font-semibold text-slate-800 sticky left-14 bg-white border-r truncate max-w-[190px]" title="${stu.name}">${stu.name}</td>
+                        ${subjects.map(sub => {
+                            const detail = res.subjectDetails[sub.id];
+                            const val = detail && detail.mark !== '' ? detail.mark : '';
+                            const failStyle = (detail && detail.entered && !detail.passed) ? 'border-rose-500 bg-rose-50 text-rose-700 font-bold' : 'border-slate-300';
+                            return `
+                                <td class="p-1.5 text-center border-l border-slate-100">
+                                    <input type="text" value="${val}"
+                                        onchange="handleMarkInput('${sKey}', '${sub.id}', this)"
+                                        onkeydown="handleMarkKeyNav(event)"
+                                        placeholder="-"
+                                        class="mark-input w-16 text-center py-1 border ${failStyle} rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 text-sm">
+                                </td>
+                            `;
+                        }).join('')}
+                        <td class="p-2 text-center font-bold text-slate-800 bg-slate-50 border-l" id="tot_${sKey}">${res.appeared ? toBn(res.totalObtained) : '-'}</td>
+                        <td class="p-2 text-center font-bold text-emerald-700 bg-slate-50" id="gpa_${sKey}">${res.appeared ? toBn(res.gpa.toFixed(2)) : '-'}</td>
+                        <td class="p-2 text-center font-bold bg-slate-50" id="grd_${sKey}">
+                            ${res.appeared ? `<span class="px-2 py-0.5 rounded text-xs ${res.isPassed ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-700'}">${res.overallGrade}</span>` : '-'}
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function handleMarkInput(sKey, subId, inputEl) {
+            const cls = appState.currentClass;
+            const subjects = appState.subjectsByClassBranch[getCurrentClassBranchKey()] || [];
+            const sub = subjects.find(s => s.id === subId);
+            const fullMarks = sub ? Number(sub.full) : 100;
+
+            const examKey = getExamKey();
+            if (!appState.marksData[examKey]) appState.marksData[examKey] = {};
+            if (!appState.marksData[examKey][sKey]) appState.marksData[examKey][sKey] = {};
+
+            const raw = inputEl.value.trim();
+            if (raw === '') {
+                delete appState.marksData[examKey][sKey][subId];
+                inputEl.classList.remove('border-rose-500', 'bg-rose-50', 'text-rose-700', 'font-bold');
+                inputEl.classList.add('border-slate-300');
+            } else {
+                const num = toEnNumber(raw);
+                if (isNaN(num) || num < 0 || num > fullMarks) {
+                    showToast(`অনুগ্রহ করে ০ থেকে ${toBn(fullMarks)}-এর মধ্যে সঠিক নম্বর দিন।`, 'error');
+                    inputEl.value = '';
+                    delete appState.marksData[examKey][sKey][subId];
+                } else {
+                    appState.marksData[examKey][sKey][subId] = num;
+                    inputEl.value = num;
+                    if (num < Number(sub.pass)) {
+                        inputEl.classList.add('border-rose-500', 'bg-rose-50', 'text-rose-700', 'font-bold');
+                    } else {
+                        inputEl.classList.remove('border-rose-500', 'bg-rose-50', 'text-rose-700', 'font-bold');
+                    }
+                }
+            }
+
+            saveState();
+
+            // Update row summary immediately
+            const results = computeClassResults();
+            const res = results.find(r => getStudentKey(r.student) === sKey);
+            if (res) {
+                document.getElementById(`tot_${sKey}`).textContent = res.appeared ? toBn(res.totalObtained) : '-';
+                document.getElementById(`gpa_${sKey}`).textContent = res.appeared ? toBn(res.gpa.toFixed(2)) : '-';
+                document.getElementById(`grd_${sKey}`).innerHTML = res.appeared
+                    ? `<span class="px-2 py-0.5 rounded text-xs ${res.isPassed ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-700'}">${res.overallGrade}</span>`
+                    : '-';
+            }
+        }
+
+        function handleMarkKeyNav(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                const inputs = Array.from(document.querySelectorAll('.mark-input'));
+                const idx = inputs.indexOf(e.target);
+                if (idx >= 0 && idx < inputs.length - 1) {
+                    inputs[idx + 1].focus();
+                    inputs[idx + 1].select();
+                }
+            }
+        }
+
+        function fillDemoMarksForClass() {
+            const cls = appState.currentClass;
+            const students = appState.studentsByClassBranch[getCurrentClassBranchKey()] || [];
+            const subjects = appState.subjectsByClassBranch[getCurrentClassBranchKey()] || [];
+            if (students.length === 0) {
+                showToast('এই শ্রেণিতে কোনো শিক্ষার্থী নেই।', 'error');
+                return;
+            }
+
+            const examKey = getExamKey();
+            appState.marksData[examKey] = {};
+
+            students.forEach((stu, sIdx) => {
+                const sKey = getStudentKey(stu);
+                appState.marksData[examKey][sKey] = {};
+                // Create realistic distribution (some A+, A, B, and ~8% fail)
+                const isWeak = (sIdx % 13 === 11);
+                const basePerformance = isWeak ? 36 : (52 + ((stu.roll * 17) % 42));
+
+                subjects.forEach((sub, subIdx) => {
+                    const full = Number(sub.full);
+                    let score = basePerformance + (((sIdx + subIdx) * 7) % 15) - 7;
+                    if (isWeak && subIdx === 2) score = 24; // Fail in one subject
+                    score = Math.max(18, Math.min(98, score));
+                    const scaledMark = Math.round((score / 100) * full);
+                    appState.marksData[examKey][sKey][sub.id] = scaledMark;
+                });
+            });
+
+            saveState();
+            refreshAllViews();
+            showToast(`${getCurrentClassBranchLabel()}-এর সকল শিক্ষার্থীর নমুনা নম্বর সফলভাবে বসানো হয়েছে!`);
+        }
+
+        function clearMarksForClass() {
+            const examKey = getExamKey();
+            appState.marksData[examKey] = {};
+            saveState();
+            refreshAllViews();
+            showToast('বর্তমান পরীক্ষার সকল নম্বর মুছে ফেলা হয়েছে।');
+        }
+
+        // =========================================================================
+        // 9. TABULATION SHEET & MERIT LIST
+        // =========================================================================
+        function renderTabulationTable() {
+            const cls = appState.currentClass;
+            const subjects = appState.subjectsByClassBranch[getCurrentClassBranchKey()] || [];
+            const sortMode = document.getElementById('tabulationSortSelect').value;
+            const filterMode = document.getElementById('tabulationFilterSelect').value;
+
+            document.getElementById('tabHeaderExam').textContent = appState.currentExam;
+            document.getElementById('tabHeaderClass').textContent = getCurrentClassBranchLabel();
+
+            const thead = document.getElementById('tabulationThead');
+            thead.innerHTML = `
+                <tr>
+                    <th class="p-2 border border-slate-400">মেধাক্রম</th>
+                    <th class="p-2 border border-slate-400">রোল</th>
+                    <th class="p-2 border border-slate-400 text-left min-w-[150px]">শিক্ষার্থীর নাম</th>
+                    ${subjects.map(s => `<th class="p-1.5 border border-slate-400 min-w-[70px]">${s.name}<br><span class="text-[10px] font-normal">(${toBn(s.full)})</span></th>`).join('')}
+                    <th class="p-2 border border-slate-400 bg-emerald-950">মোট নম্বর</th>
+                    <th class="p-2 border border-slate-400 bg-emerald-950">GPA</th>
+                    <th class="p-2 border border-slate-400 bg-emerald-950">গ্রেড</th>
+                    <th class="p-2 border border-slate-400 bg-emerald-950">ফলাফল</th>
+                </tr>
+            `;
+
+            let results = computeClassResults();
+
+            if (filterMode === 'passed') results = results.filter(r => r.isPassed);
+            if (filterMode === 'failed') results = results.filter(r => r.appeared && !r.isPassed);
+
+            if (sortMode === 'merit') {
+                results.sort((a, b) => {
+                    if (a.meritPosition && b.meritPosition) return a.meritPosition - b.meritPosition;
+                    if (a.meritPosition) return -1;
+                    if (b.meritPosition) return 1;
+                    return a.student.roll - b.student.roll;
+                });
+            } else {
+                results.sort((a, b) => a.student.roll - b.student.roll);
+            }
+
+            const tbody = document.getElementById('tabulationTbody');
+            if (results.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="${subjects.length + 7}" class="p-6 text-slate-400">কোনো তথ্য পাওয়া যায়নি।</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = results.map(r => `
+                <tr class="${r.appeared && !r.isPassed ? 'bg-rose-50/40' : 'hover:bg-slate-50'}">
+                    <td class="p-1.5 border border-slate-300 font-bold text-emerald-800">${r.meritPosition ? toBn(r.meritPosition) : '-'}</td>
+                    <td class="p-1.5 border border-slate-300 font-semibold">${toBn(r.student.roll)}</td>
+                    <td class="p-1.5 border border-slate-300 text-left font-medium">${r.student.name}</td>
+                    ${subjects.map(s => {
+                        const d = r.subjectDetails[s.id];
+                        if (!d || !d.entered) return `<td class="p-1.5 border border-slate-300 text-slate-400">-</td>`;
+                        return `<td class="p-1.5 border border-slate-300 ${!d.passed ? 'text-rose-600 font-bold bg-rose-50' : ''}">${toBn(d.mark)} <span class="text-[10px] text-slate-500">(${d.lg})</span></td>`;
+                    }).join('')}
+                    <td class="p-1.5 border border-slate-300 font-bold">${r.appeared ? toBn(r.totalObtained) : '-'}</td>
+                    <td class="p-1.5 border border-slate-300 font-bold text-emerald-800">${r.appeared ? toBn(r.gpa.toFixed(2)) : '-'}</td>
+                    <td class="p-1.5 border border-slate-300 font-bold">${r.overallGrade}</td>
+                    <td class="p-1.5 border border-slate-300 font-bold ${r.isPassed ? 'text-emerald-700' : 'text-rose-600'}">
+                        ${!r.appeared ? 'অনুপস্থিত' : (r.isPassed ? 'উত্তীর্ণ' : 'অকৃতকার্য')}
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function exportTabulationToExcel() {
+            const cls = appState.currentClass;
+            const subjects = appState.subjectsByClassBranch[getCurrentClassBranchKey()] || [];
+            const results = computeClassResults().sort((a, b) => (a.meritPosition || 9999) - (b.meritPosition || 9999));
+
+            const header = ['মেধাক্রম', 'রোল', 'ইউনিক আইডি', 'শিক্ষার্থীর নাম', ...subjects.map(s => `${s.name} (${s.full})`), 'সর্বমোট নম্বর', 'GPA', 'গ্রেড', 'ফলাফল'];
+            const rows = [header];
+
+            results.forEach(r => {
+                rows.push([
+                    r.meritPosition || '-',
+                    r.student.roll,
+                    r.student.uid || '',
+                    r.student.name,
+                    ...subjects.map(s => r.subjectDetails[s.id]?.entered ? r.subjectDetails[s.id].mark : ''),
+                    r.appeared ? r.totalObtained : '',
+                    r.appeared ? r.gpa.toFixed(2) : '',
+                    r.overallGrade,
+                    !r.appeared ? 'অনুপস্থিত' : (r.isPassed ? 'উত্তীর্ণ' : 'অকৃতকার্য')
+                ]);
+            });
+
+            const wb = XLSX.utils.book_new();
+            const ws = XLSX.utils.aoa_to_sheet(rows);
+            XLSX.utils.book_append_sheet(wb, ws, 'Tabulation_Sheet');
+            XLSX.writeFile(wb, `Tabulation_${appState.currentClass}_${appState.currentBranch}_${appState.currentExam}.xlsx`);
+        }
+
+        function printTabulation() {
+            document.body.classList.add('landscape-print');
+            window.print();
+            setTimeout(() => document.body.classList.remove('landscape-print'), 500);
+        }
+
+        // =========================================================================
+        // 10. ACADEMIC TRANSCRIPT / REPORT CARD GENERATOR & PRINT
+        // =========================================================================
+        function populateReportStudentDropdown() {
+            const cls = appState.currentClass;
+            const students = appState.studentsByClassBranch[getCurrentClassBranchKey()] || [];
+            const select = document.getElementById('reportStudentSelect');
+            const prevVal = select.value;
+
+            select.innerHTML = students.map((s, idx) =>
+                `<option value="${idx}">রোল: ${toBn(s.roll)} — ${s.name} (${s.uid || 'N/A'})</option>`
+            ).join('');
+
+            if (prevVal && Number(prevVal) < students.length) {
+                select.value = prevVal;
+            }
+            renderReportCards();
+        }
+
+        function prevReportStudent() {
+            const select = document.getElementById('reportStudentSelect');
+            if (select.selectedIndex > 0) {
+                select.selectedIndex -= 1;
+                renderReportCards();
+            }
+        }
+
+        function nextReportStudent() {
+            const select = document.getElementById('reportStudentSelect');
+            if (select.selectedIndex < select.options.length - 1) {
+                select.selectedIndex += 1;
+                renderReportCards();
+            }
+        }
+
+        function renderReportCards() {
+            const cls = appState.currentClass;
+            const subjects = appState.subjectsByClassBranch[getCurrentClassBranchKey()] || [];
+            const results = computeClassResults();
+            const mode = document.getElementById('reportModeSelect').value;
+            const selectedIdx = Number(document.getElementById('reportStudentSelect').value || 0);
+            const container = document.getElementById('reportCardsContainer');
+
+            if (results.length === 0) {
+                container.innerHTML = `<div class="bg-white p-10 rounded-2xl text-center text-slate-400">এই শ্রেণিতে কোনো শিক্ষার্থী নেই।</div>`;
+                return;
+            }
+
+            let targetResults = [];
+            if (mode === 'single') {
+                targetResults = [results[selectedIdx] || results[0]];
+            } else if (mode === 'batch10') {
+                targetResults = results.slice(0, 10);
+            } else {
+                targetResults = results;
+            }
+
+            container.innerHTML = targetResults.map(res => buildSingleReportCardHTML(res, subjects)).join('');
+        }
+
+        function buildSingleReportCardHTML(res, subjects) {
+            const stu = res.student;
+            const totalStudents = (appState.studentsByClassBranch[getCurrentClassBranchKey()] || []).length;
+
+            const teacherComment = !res.appeared
+                ? 'পরীক্ষায় অংশগ্রহণ করেনি।'
+                : res.gpa === 5.00
+                    ? 'অসাধারণ ফলাফল! ভবিষ্যতে আরও সাফল্যের জন্য শুভকামনা।'
+                    : res.isPassed
+                        ? 'সন্তোষজনক ফলাফল। নিয়মিত অধ্যবসায় অব্যাহত রাখলে আরও ভালো করবে।'
+                        : 'আরও মনোযোগী হওয়া ও নিয়মিত পড়াশোনা করা প্রয়োজন।';
+
+            return `
+                <div class="report-card-page bg-white max-w-4xl mx-auto p-6 sm:p-8 rounded-2xl shadow-md border-4 border-double border-emerald-800 relative">
+                    <!-- Top Header & Mini Grading Table -->
+                    <div class="flex flex-col sm:flex-row justify-between items-start gap-4 border-b-2 border-emerald-800 pb-4">
+                        <div class="flex items-center gap-3">
+                            <div class="w-16 h-16 rounded-full border-2 border-emerald-800 bg-emerald-50 flex items-center justify-center shrink-0">
+                                <i class="fa-solid fa-mosque text-3xl text-emerald-800"></i>
+                            </div>
+                            <div>
+                                <h1 class="text-xl sm:text-2xl font-bold text-emerald-950">ফেঞ্চুগঞ্জ মোহাম্মদিয়া কামিল মাদরাসা</h1>
+                                <p class="text-xs sm:text-sm font-semibold text-slate-700">ডাকঘর ও উপজেলা: ফেঞ্চুগঞ্জ, জেলা: সিলেট।</p>
+                                <div class="mt-1.5 inline-block px-3 py-0.5 bg-emerald-800 text-white text-xs font-bold rounded">
+                                    একাডেমিক ট্রান্সক্রিপ্ট / নম্বরপত্র (Progress Report)
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Mini Grading Scale -->
+                        <table class="text-[10px] border border-slate-400 text-center shrink-0">
+                            <thead class="bg-emerald-900 text-white">
+                                <tr>
+                                    <th class="px-1.5 py-0.5 border border-slate-400">নম্বর</th>
+                                    <th class="px-1.5 py-0.5 border border-slate-400">গ্রেড</th>
+                                    <th class="px-1.5 py-0.5 border border-slate-400">পয়েন্ট</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr><td class="px-1.5 border border-slate-300">৮০-১০০</td><td class="px-1.5 border border-slate-300 font-bold">A+</td><td class="px-1.5 border border-slate-300">৫.০০</td></tr>
+                                <tr><td class="px-1.5 border border-slate-300">৭০-৭৯</td><td class="px-1.5 border border-slate-300 font-bold">A</td><td class="px-1.5 border border-slate-300">৪.০০</td></tr>
+                                <tr><td class="px-1.5 border border-slate-300">৬০-৬৯</td><td class="px-1.5 border border-slate-300 font-bold">A-</td><td class="px-1.5 border border-slate-300">৩.৫০</td></tr>
+                                <tr><td class="px-1.5 border border-slate-300">৫০-৫৯</td><td class="px-1.5 border border-slate-300 font-bold">B</td><td class="px-1.5 border border-slate-300">৩.০০</td></tr>
+                                <tr><td class="px-1.5 border border-slate-300">৪০-৪৯</td><td class="px-1.5 border border-slate-300 font-bold">C</td><td class="px-1.5 border border-slate-300">২.০০</td></tr>
+                                <tr><td class="px-1.5 border border-slate-300">৩৩-৩৯</td><td class="px-1.5 border border-slate-300 font-bold">D</td><td class="px-1.5 border border-slate-300">১.০০</td></tr>
+                                <tr><td class="px-1.5 border border-slate-300">০০-৩২</td><td class="px-1.5 border border-slate-300 font-bold text-rose-600">F</td><td class="px-1.5 border border-slate-300">০.০০</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Exam & Student Info Grid -->
+                    <div class="my-3 text-center">
+                        <span class="text-base font-bold text-emerald-900 underline decoration-amber-500 decoration-2 underline-offset-4">
+                            ${appState.currentExam} (শিক্ষাবর্ষ: ${appState.session})
+                        </span>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-1.5 bg-emerald-50/50 p-3.5 rounded-xl border border-emerald-200 text-xs sm:text-sm mb-4">
+                        <div><span class="font-semibold text-slate-600">শিক্ষার্থীর নাম:</span> <strong class="text-slate-900">${stu.name}</strong></div>
+                        <div><span class="font-semibold text-slate-600">রোল / ক্রম নং:</span> <strong class="text-emerald-900">${toBn(stu.roll)}</strong></div>
+                        <div><span class="font-semibold text-slate-600">পিতার নাম:</span> <span class="text-slate-800">${stu.father || '................................'}</span></div>
+                        <div><span class="font-semibold text-slate-600">শিক্ষার্থীর ইউনিক আইডি:</span> <strong class="font-mono text-slate-800">${stu.uid || '................'}</strong></div>
+                        <div><span class="font-semibold text-slate-600">মাতার নাম:</span> <span class="text-slate-800">${stu.mother || '................................'}</span></div>
+                        <div><span class="font-semibold text-slate-600">শ্রেণি ও শাখা:</span> <strong class="text-slate-900">${appState.currentClass} (${appState.currentBranch})</strong></div>
+                        <div class="sm:col-span-2"><span class="font-semibold text-slate-600">ঠিকানা ও মোবাইল:</span> <span class="text-slate-700">${stu.address || '-'} ${stu.mobile ? `(মোবা: ${stu.mobile})` : ''}</span></div>
+                    </div>
+
+                    <!-- Marks Table -->
+                    <table class="w-full text-xs sm:text-sm border-collapse border border-slate-400 mb-4">
+                        <thead class="bg-emerald-900 text-white">
+                            <tr>
+                                <th class="p-2 border border-slate-400 w-12 text-center">ক্রম</th>
+                                <th class="p-2 border border-slate-400 text-left">বিষয়ের নাম</th>
+                                <th class="p-2 border border-slate-400 w-20 text-center">পূর্ণমান</th>
+                                <th class="p-2 border border-slate-400 w-20 text-center">পাস নম্বর</th>
+                                <th class="p-2 border border-slate-400 w-24 text-center">প্রাপ্ত নম্বর</th>
+                                <th class="p-2 border border-slate-400 w-24 text-center">লেটার গ্রেড</th>
+                                <th class="p-2 border border-slate-400 w-24 text-center">গ্রেড পয়েন্ট</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${subjects.map((sub, i) => {
+                                const d = res.subjectDetails[sub.id];
+                                const hasMark = d && d.entered;
+                                return `
+                                    <tr class="${hasMark && !d.passed ? 'bg-rose-50' : ''}">
+                                        <td class="p-1.5 border border-slate-400 text-center font-semibold">${toBn(i + 1)}</td>
+                                        <td class="p-1.5 border border-slate-400 font-medium">${sub.name}</td>
+                                        <td class="p-1.5 border border-slate-400 text-center">${toBn(sub.full)}</td>
+                                        <td class="p-1.5 border border-slate-400 text-center">${toBn(sub.pass)}</td>
+                                        <td class="p-1.5 border border-slate-400 text-center font-bold ${hasMark && !d.passed ? 'text-rose-600' : ''}">${hasMark ? toBn(d.mark) : '-'}</td>
+                                        <td class="p-1.5 border border-slate-400 text-center font-bold ${hasMark && !d.passed ? 'text-rose-600' : 'text-emerald-800'}">${hasMark ? d.lg : '-'}</td>
+                                        <td class="p-1.5 border border-slate-400 text-center font-semibold">${hasMark ? toBn(d.gp.toFixed(2)) : '-'}</td>
+                                    </tr>
+                                `;
+                            }).join('')}
+                            <tr class="bg-emerald-50 font-bold">
+                                <td colspan="2" class="p-2 border border-slate-400 text-right">সর্বমোট পূর্ণমান ও প্রাপ্ত নম্বর:</td>
+                                <td class="p-2 border border-slate-400 text-center">${toBn(res.totalFullMarks)}</td>
+                                <td class="p-2 border border-slate-400 text-center">-</td>
+                                <td class="p-2 border border-slate-400 text-center text-emerald-900 text-base">${res.appeared ? toBn(res.totalObtained) : '-'}</td>
+                                <td class="p-2 border border-slate-400 text-center">${res.overallGrade}</td>
+                                <td class="p-2 border border-slate-400 text-center text-emerald-900 text-base">GPA: ${res.appeared ? toBn(res.gpa.toFixed(2)) : '-'}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <!-- Summary & Merit Box -->
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4 text-center text-xs sm:text-sm">
+                        <div class="p-2.5 border border-slate-300 rounded-xl bg-slate-50">
+                            <div class="text-slate-500 text-xs">প্রাপ্ত জিপিএ (GPA)</div>
+                            <div class="text-lg font-bold text-emerald-800">${res.appeared ? toBn(res.gpa.toFixed(2)) : '০.০০'}</div>
+                        </div>
+                        <div class="p-2.5 border border-slate-300 rounded-xl bg-slate-50">
+                            <div class="text-slate-500 text-xs">চূড়ান্ত লেটার গ্রেড</div>
+                            <div class="text-lg font-bold text-slate-900">${res.overallGrade}</div>
+                        </div>
+                        <div class="p-2.5 border border-slate-300 rounded-xl bg-slate-50">
+                            <div class="text-slate-500 text-xs">শ্রেণিতে মেধাক্রম</div>
+                            <div class="text-lg font-bold text-amber-700">${res.meritPosition ? `${toBn(res.meritPosition)} / ${toBn(totalStudents)}` : '-'}</div>
+                        </div>
+                        <div class="p-2.5 border border-slate-300 rounded-xl ${res.isPassed ? 'bg-emerald-50 border-emerald-300' : 'bg-rose-50 border-rose-300'}">
+                            <div class="text-slate-500 text-xs">ফলাফলের অবস্থা</div>
+                            <div class="text-lg font-bold ${res.isPassed ? 'text-emerald-700' : 'text-rose-600'}">
+                                ${!res.appeared ? 'অনুপস্থিত' : (res.isPassed ? 'উত্তীর্ণ (Passed)' : 'অকৃতকার্য (Failed)')}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Teacher Remark -->
+                    <div class="p-2.5 border border-dashed border-slate-400 rounded-lg text-xs text-slate-700 mb-10">
+                        <strong>শ্রেণি শিক্ষকের মন্তব্য:</strong> ${teacherComment}
+                    </div>
+
+                    <!-- Signatures -->
+                    <div class="grid grid-cols-3 gap-4 pt-4 text-center text-xs font-semibold text-slate-700">
+                        <div>
+                            <div class="border-t border-slate-500 w-36 mx-auto pt-1">অভিভাবকের স্বাক্ষর</div>
+                        </div>
+                        <div>
+                            <div class="border-t border-slate-500 w-36 mx-auto pt-1">শ্রেণি শিক্ষকের স্বাক্ষর</div>
+                        </div>
+                        <div>
+                            <div class="border-t border-slate-500 w-40 mx-auto pt-1">অধ্যক্ষের স্বাক্ষর ও সীল</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function printReportCards() {
+            document.body.classList.remove('landscape-print');
+            window.print();
+        }
+
+        // =========================================================================
+        // 11. BACKUP, RESTORE & TOAST NOTIFICATIONS
+        // =========================================================================
+        function exportFullBackup() {
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(appState));
+            const dlAnchor = document.createElement('a');
+            dlAnchor.setAttribute("href", dataStr);
+            dlAnchor.setAttribute("download", `Fenchuganj_Madrasah_Result_Backup_${new Date().toISOString().slice(0,10)}.json`);
+            document.body.appendChild(dlAnchor);
+            dlAnchor.click();
+            dlAnchor.remove();
+            showToast('সম্পূর্ণ ডাটা ব্যাকআপ ডাউনলোড হয়েছে।');
+        }
+
+        function importFullBackup(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const parsed = JSON.parse(e.target.result);
+                    if (parsed && parsed.studentsByClassBranch) {
+                        appState = parsed;
+                        saveState();
+                        initApp();
+                        showToast('ব্যাকআপ ফাইল সফলভাবে রিস্টোর করা হয়েছে!');
+                    } else if (parsed && parsed.studentsByClass) {
+                        seedInitialData();
+                        ALL_CLASSES.forEach(cls => {
+                            const cbKey = makeClassBranchKey(cls, 'বালক শাখা');
+                            if (parsed.studentsByClass[cls]) appState.studentsByClassBranch[cbKey] = parsed.studentsByClass[cls];
+                            if (parsed.subjectsByClass && parsed.subjectsByClass[cls]) appState.subjectsByClassBranch[cbKey] = parsed.subjectsByClass[cls];
+                        });
+                        if (parsed.marksData) {
+                            Object.keys(parsed.marksData).forEach(k => {
+                                const p = k.split('__');
+                                if (p.length === 2) appState.marksData[`${p[0]}__বালক শাখা__${p[1]}`] = parsed.marksData[k];
+                            });
+                        }
+                        saveState();
+                        initApp();
+                        showToast('পুরনো ব্যাকআপ ফাইল সফলভাবে রিস্টোর ও আপগ্রেড করা হয়েছে!');
+                    } else {
+                        showToast('সঠিক ব্যাকআপ ফাইল নয়।', 'error');
+                    }
+                } catch (err) {
+                    showToast('ফাইল পড়তে ত্রুটি হয়েছে।', 'error');
+                }
+            };
+            reader.readAsText(file);
+            event.target.value = '';
+        }
+
+        function resetToDefault6thClass() {
+            localStorage.removeItem(STORAGE_KEY);
+            seedInitialData();
+            initApp();
+            showToast('সফটওয়্যারটি ডিফল্ট অবস্থায় (৬ষ্ঠ শ্রেণি বালক শাখার ১৫৫ জন শিক্ষার্থীসহ) রিসেট করা হয়েছে।');
+        }
+
+        function showToast(msg, type = 'success') {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            const bg = type === 'error' ? 'bg-rose-700' : 'bg-emerald-800';
+            toast.className = `${bg} text-white px-4 py-3 rounded-xl shadow-lg text-sm font-medium flex items-center gap-2 transition-opacity duration-300`;
+            toast.innerHTML = `<i class="fa-solid ${type === 'error' ? 'fa-circle-exclamation' : 'fa-circle-check'}"></i> <span>${msg}</span>`;
+            container.appendChild(toast);
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                setTimeout(() => toast.remove(), 300);
+            }, 3200);
+        }
+
+        // Start App on Load
+        window.onload = initApp;
+    </script>
+</body>
+</html>
